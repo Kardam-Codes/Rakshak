@@ -6,6 +6,52 @@ import '../../models/upi_transaction_entity.dart';
 import '../../engine/models/risk_level.dart';
 import '../../engine/models/scam_category.dart';
 import '../../engine/models/transaction_type.dart';
+import '../../models/explanation_entity.dart';
+
+class ExplanationEntityAdapter extends TypeAdapter<ExplanationEntity> {
+  @override
+  final int typeId = 3;
+
+  @override
+  ExplanationEntity read(BinaryReader reader) {
+    final fields = reader.readMap();
+    return ExplanationEntity(
+      id: fields['id'],
+      sourceFeature: fields['sourceFeature'] ?? '',
+      category: fields['category'] ?? '',
+      riskLevel: RiskLevel.values.firstWhere(
+        (e) => e.name == fields['riskLevel'],
+        orElse: () => RiskLevel.safe,
+      ),
+      confidence: fields['confidence'] ?? 0.0,
+      offlineExplanation: fields['offlineExplanation'] ?? '',
+      aiExplanation: fields['aiExplanation'],
+      recommendedAction: fields['recommendedAction'],
+      preventionTips: (fields['preventionTips'] as List?)?.cast<String>() ?? [],
+      summary: fields['summary'] ?? '',
+      createdAt: fields['createdAt'] ?? DateTime.now(),
+      contentHash: fields['contentHash'] ?? '',
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ExplanationEntity obj) {
+    writer.writeMap({
+      'id': obj.id,
+      'sourceFeature': obj.sourceFeature,
+      'category': obj.category,
+      'riskLevel': obj.riskLevel.name,
+      'confidence': obj.confidence,
+      'offlineExplanation': obj.offlineExplanation,
+      'aiExplanation': obj.aiExplanation,
+      'recommendedAction': obj.recommendedAction,
+      'preventionTips': obj.preventionTips,
+      'summary': obj.summary,
+      'createdAt': obj.createdAt,
+      'contentHash': obj.contentHash,
+    });
+  }
+}
 
 class NotificationEntityAdapter extends TypeAdapter<NotificationEntity> {
   @override
@@ -176,15 +222,18 @@ class AppDatabase {
   static const String _boxName = 'notifications_box';
   static const String _callsBoxName = 'calls_box';
   static const String _upiBoxName = 'upi_transactions_box';
+  static const String _explanationsBoxName = 'explanations_box';
 
   Future<void> init() async {
     await Hive.initFlutter();
     Hive.registerAdapter(NotificationEntityAdapter());
     Hive.registerAdapter(CallEntityAdapter());
     Hive.registerAdapter(UPITransactionEntityAdapter());
+    Hive.registerAdapter(ExplanationEntityAdapter());
     await Hive.openBox<NotificationEntity>(_boxName);
     await Hive.openBox<CallEntity>(_callsBoxName);
     await Hive.openBox<UPITransactionEntity>(_upiBoxName);
+    await Hive.openBox<ExplanationEntity>(_explanationsBoxName);
   }
 
   Box<NotificationEntity> get _box => Hive.box<NotificationEntity>(_boxName);
@@ -310,6 +359,29 @@ class AppDatabase {
 
   Future<void> clearUpiTransactions() async {
     await _upiBox.clear();
+  }
+
+  // --- Explanation Entity Methods ---
+  Box<ExplanationEntity> get _expBox => Hive.box<ExplanationEntity>(_explanationsBoxName);
+
+  Future<int> insertExplanation(ExplanationEntity entity) async {
+    final id = await _expBox.add(entity);
+    await _expBox.put(id, entity.copyWith(id: id));
+    return id;
+  }
+
+  Future<void> updateExplanation(ExplanationEntity entity) async {
+    if (entity.id != null && _expBox.containsKey(entity.id)) {
+      await _expBox.put(entity.id!, entity);
+    }
+  }
+
+  ExplanationEntity? getExplanationByHash(String hash) {
+    try {
+      return _expBox.values.firstWhere((e) => e.contentHash == hash);
+    } catch (_) {
+      return null;
+    }
   }
 }
 

@@ -10,15 +10,17 @@ import '../repositories/notification_repository.dart';
 import '../repositories/call_repository.dart';
 import '../models/upi_transaction_entity.dart';
 import '../repositories/upi_repository.dart';
+import 'explainability/explainability_engine.dart';
 
 class AlertEngine {
   final NotificationRepository _repository;
   final CallRepository _callRepository;
   final UPIRepository _upiRepository;
+  final ExplainabilityEngine _explainEngine;
   // A callback triggered to show native popup
   final Function(NotificationEntity)? onCriticalAlert;
 
-  AlertEngine(this._repository, this._callRepository, this._upiRepository, {this.onCriticalAlert});
+  AlertEngine(this._repository, this._callRepository, this._upiRepository, this._explainEngine, {this.onCriticalAlert});
 
   Future<void> processNotification(NotificationEntity entity) async {
     // 1. Generate hash for deduplication/caching based on content
@@ -77,24 +79,22 @@ class AlertEngine {
       final maskedBody = PIIMasking.maskData(entity.body);
       final fullMaskedText = 'Title: $maskedTitle\nBody: $maskedBody';
 
-      // Call API
-      final explanation = await RakshakClient.fetchExplanation(
-        notificationText: fullMaskedText,
+      final expEntity = await _explainEngine.processExplanation(
+        sourceFeature: 'notification',
+        content: fullMaskedText,
         category: entity.category,
-        risk: entity.riskLevel,
-        confidence: 0.8, // Fallback base, offline engine output normally bound here
+        riskLevel: entity.riskLevel,
+        confidence: 0.8,
         matchedRules: entity.matchedRules,
       );
 
-      if (explanation != null) {
-         final updatedEntity = entity.copyWith(
-            aiSimpleExplanation: explanation.simpleExplanation,
-            aiReason: explanation.reason,
-            aiRecommendedAction: explanation.recommendedAction,
-         );
-         // Update the existing record in Hive dynamically triggering Riverpod update
-         await _repository.updateNotification(updatedEntity);
-      }
+      final updatedEntity = entity.copyWith(
+         aiSimpleExplanation: expEntity.summary,
+         aiReason: expEntity.aiExplanation ?? expEntity.offlineExplanation,
+         aiRecommendedAction: expEntity.recommendedAction,
+      );
+      // Update the existing record in Hive dynamically triggering Riverpod update
+      await _repository.updateNotification(updatedEntity);
     } catch (e) {
       debugPrint('AI Processing Failed: $e');
     }
@@ -117,22 +117,20 @@ class AlertEngine {
 
   Future<void> _processCallAiAsync(CallEntity entity) async {
     try {
-      final explanation = await RakshakClient.fetchCallExplanation(
-        phoneNumber: entity.phoneNumber, // We can PII mask this if backend rules are strict
+      final expEntity = await _explainEngine.processExplanation(
+        sourceFeature: 'call',
+        content: 'Duration: ${entity.durationSeconds}s, Contact: ${entity.phoneNumber}',
         category: entity.category,
-        risk: entity.riskLevel,
+        riskLevel: entity.riskLevel,
         confidence: 0.8,
         matchedRules: entity.matchedRules,
-        callDuration: entity.durationSeconds,
       );
 
-      if (explanation != null) {
-         final updatedEntity = entity.copyWith(
-            aiExplanation: "${explanation.simpleExplanation} ${explanation.reason}",
-            aiRecommendedAction: explanation.recommendedAction,
-         );
-         await _callRepository.updateCall(updatedEntity);
-      }
+      final updatedEntity = entity.copyWith(
+         aiExplanation: "${expEntity.summary} ${expEntity.aiExplanation ?? expEntity.offlineExplanation}",
+         aiRecommendedAction: expEntity.recommendedAction,
+      );
+      await _callRepository.updateCall(updatedEntity);
     } catch (e) {
       debugPrint('Call AI Processing Failed: $e');
     }
@@ -153,24 +151,21 @@ class AlertEngine {
        // Masking UPI details
        final maskedMerchant = PIIMasking.maskData(entity.merchantName);
        
-       final explanation = await RakshakClient.fetchUpiExplanation(
-          merchantName: maskedMerchant,
-          transactionType: entity.transactionType.name,
-          amount: entity.amount,
-          category: entity.category,
-          risk: entity.riskLevel,
-          confidence: entity.confidence,
-          matchedRules: entity.matchedRules
+       final expEntity = await _explainEngine.processExplanation(
+         sourceFeature: 'upi',
+         content: 'Type: ${entity.transactionType.name}, Amount: ${entity.amount}, Merchant: $maskedMerchant',
+         category: entity.category,
+         riskLevel: entity.riskLevel,
+         confidence: entity.confidence,
+         matchedRules: entity.matchedRules,
        );
 
-       if (explanation != null) {
-          if (entity.id != null) {
-             await _upiRepository.updateTransactionExplanation(
-                 entity.id!,
-                 "${explanation.simpleExplanation} ${explanation.reason}",
-                 explanation.recommendedAction
-             );
-          }
+       if (entity.id != null) {
+          await _upiRepository.updateTransactionExplanation(
+              entity.id!,
+              "${expEntity.summary} ${expEntity.aiExplanation ?? expEntity.offlineExplanation}",
+              expEntity.recommendedAction
+          );
        }
     } catch (e) {
        debugPrint('UPI AI Processing Failed: $e');

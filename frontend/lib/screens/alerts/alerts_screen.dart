@@ -6,12 +6,15 @@ import '../../providers/call_provider.dart';
 import '../../providers/upi_provider.dart';
 import '../../models/notification_entity.dart';
 import '../../models/call_entity.dart';
+import '../../models/upi_transaction_entity.dart';
 import '../../widgets/empty_state.dart';
 import '../../core/constants/icons.dart';
 import '../../core/constants/spacing.dart';
 import '../../widgets/upi_alert_card.dart';
 import '../../widgets/call_card.dart';
 import 'widgets/notification_card.dart';
+import '../../models/explanation_entity.dart';
+import '../../engine/explainability/templates/explanation_templates.dart';
 
 class AlertsScreen extends ConsumerStatefulWidget {
   const AlertsScreen({Key? key}) : super(key: key);
@@ -24,6 +27,71 @@ enum AlertType { all, message, call, upi }
 
 class AlertsScreenState extends ConsumerState<AlertsScreen> {
   AlertType _selectedType = AlertType.all;
+
+  void _navigateToDetail(BuildContext context, dynamic item, String type) {
+    late ExplanationEntity entity;
+    late String title;
+    late String subtitle;
+
+    if (item is NotificationEntity) {
+       final template = ExplanationTemplateBuilder.build(item.category);
+       entity = ExplanationEntity(
+          sourceFeature: 'notification',
+          category: item.category.name,
+          riskLevel: item.riskLevel,
+          confidence: 0.8,
+          offlineExplanation: item.reason,
+          aiExplanation: item.aiReason,
+          recommendedAction: item.aiRecommendedAction,
+          preventionTips: template['preventionTips']?.cast<String>() ?? [],
+          summary: item.aiSimpleExplanation ?? 'Suspicious Activity',
+          createdAt: item.timestamp,
+          contentHash: item.notificationHash ?? '',
+       );
+       title = item.appName;
+       subtitle = item.title;
+    } else if (item is CallEntity) {
+       final template = ExplanationTemplateBuilder.build(item.category);
+       entity = ExplanationEntity(
+          sourceFeature: 'call',
+          category: item.category.name,
+          riskLevel: item.riskLevel,
+          confidence: 0.8,
+          offlineExplanation: item.offlineReason,
+          aiExplanation: item.aiExplanation,
+          recommendedAction: item.aiRecommendedAction,
+          preventionTips: template['preventionTips']?.cast<String>() ?? [],
+          summary: item.aiExplanation != null ? 'Call Analysis Complete' : 'Flagged Offline',
+          createdAt: item.timestamp,
+          contentHash: '',
+       );
+       title = item.contactName ?? item.phoneNumber;
+       subtitle = 'Duration: ${item.durationSeconds}s';
+    } else if (item is UPITransactionEntity) {
+       final template = ExplanationTemplateBuilder.build(item.category);
+       entity = ExplanationEntity(
+          sourceFeature: 'upi',
+          category: item.category.name,
+          riskLevel: item.riskLevel,
+          confidence: item.confidence,
+          offlineExplanation: item.offlineReason,
+          aiExplanation: item.aiExplanation,
+          recommendedAction: item.recommendedAction,
+          preventionTips: template['preventionTips']?.cast<String>() ?? [],
+          summary: item.aiExplanation != null ? 'Transaction Analysis Complete' : 'Flagged Offline',
+          createdAt: item.timestamp,
+          contentHash: '',
+       );
+       title = item.merchantName;
+       subtitle = 'INR ${item.amount.toStringAsFixed(2)} - ${item.transactionType.name}';
+    }
+
+    context.push('/alerts/explain_detail', extra: {
+        'entity': entity,
+        'title': title,
+        'subtitle': subtitle,
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,17 +153,17 @@ class AlertsScreenState extends ConsumerState<AlertsScreen> {
                                if (item is NotificationEntity) {
                                   return NotificationCard(
                                     notification: item,
-                                    onTap: () => context.push('/alerts/notification_detail', extra: item),
+                                    onTap: () => _navigateToDetail(context, item, 'notification'),
                                   );
                                } else if (item is CallEntity) {
                                   return CallCard(
                                     call: item,
-                                    onTap: () => context.push('/alerts/call_detail', extra: item),
+                                    onTap: () => _navigateToDetail(context, item, 'call'),
                                   );
                                } else {
                                   return UPIAlertCard(
                                     transaction: item,
-                                    onTap: () => context.push('/alerts/transaction_detail', extra: item),
+                                    onTap: () => _navigateToDetail(context, item, 'upi'),
                                   );
                                }
                              },

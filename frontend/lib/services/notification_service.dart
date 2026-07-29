@@ -9,16 +9,19 @@ import '../engine/rule_engine.dart';
 import '../engine/alert_engine.dart';
 import '../services/upi_protection_service.dart';
 import '../repositories/upi_repository.dart';
+import '../repositories/explainability_repository.dart';
+import '../engine/explainability/explainability_engine.dart';
 
 class NotificationService {
   final NotificationRepository _repository;
   final CallRepository _callRepository;
   final UPIRepository _upiRepository;
+  final ExplainabilityEngine _explainEngine;
   late final AlertEngine _alertEngine;
   late final UPIProtectionService _upiProtectionService;
 
-  NotificationService(this._repository, this._callRepository, this._upiRepository) {
-    _alertEngine = AlertEngine(_repository, _callRepository, _upiRepository, onCriticalAlert: _showCriticalPopupNative);
+  NotificationService(this._repository, this._callRepository, this._upiRepository, this._explainEngine) {
+    _alertEngine = AlertEngine(_repository, _callRepository, _upiRepository, _explainEngine, onCriticalAlert: _showCriticalPopupNative);
     _upiProtectionService = UPIProtectionService(_upiRepository, _alertEngine);
   }
 

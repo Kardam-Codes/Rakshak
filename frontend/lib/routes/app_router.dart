@@ -7,12 +7,12 @@ import '../screens/alerts/alerts_screen.dart';
 import '../screens/scanner/scan_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/settings/settings_screen.dart';
-import '../screens/alerts/notification_detail_screen.dart';
+import '../screens/settings/settings_screen.dart';
 import '../models/notification_entity.dart';
-import '../screens/history/call_detail_screen.dart';
-import '../screens/alerts/transaction_detail_screen.dart';
 import '../models/call_entity.dart';
 import '../models/upi_transaction_entity.dart';
+import '../screens/alerts/explanation_detail_screen.dart';
+import '../models/explanation_entity.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -38,24 +38,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const AlertsScreen(),
                 routes: [
                   GoRoute(
-                    path: 'notification_detail',
+                    path: 'explain_detail',
                     builder: (context, state) {
-                      final notification = state.extra as NotificationEntity;
-                      return NotificationDetailScreen(notification: notification);
-                    },
-                  ),
-                  GoRoute(
-                    path: 'call_detail',
-                    builder: (context, state) {
-                      final call = state.extra as CallEntity;
-                      return CallDetailScreen(call: call);
-                    },
-                  ),
-                  GoRoute(
-                    path: 'transaction_detail',
-                    builder: (context, state) {
-                      final transaction = state.extra as UPITransactionEntity;
-                      return TransactionDetailScreen(transaction: transaction);
+                      final extra = state.extra as Map<String, dynamic>;
+                      return ExplanationDetailScreen(
+                        entity: extra['entity'] as ExplanationEntity,
+                        contextTitle: extra['title'] as String,
+                        contextSubtitle: extra['subtitle'] as String,
+                      );
                     },
                   ),
                 ],
@@ -77,10 +67,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const HistoryScreen(), // Switch to CallHistoryScreen if needed
                 routes: [
                   GoRoute(
-                    path: 'call_detail',
+                    path: 'explain_detail',
                     builder: (context, state) {
-                      final call = state.extra as CallEntity;
-                      return CallDetailScreen(call: call);
+                      final extra = state.extra as Map<String, dynamic>;
+                      return ExplanationDetailScreen(
+                        entity: extra['entity'] as ExplanationEntity,
+                        contextTitle: extra['title'] as String,
+                        contextSubtitle: extra['subtitle'] as String,
+                      );
                     },
                   ),
                 ],

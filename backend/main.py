@@ -95,3 +95,22 @@ def explain_upi(req: UpiAnalysisRequest):
         return explanation
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+
+class GeneralizedAnalysisRequest(BaseModel):
+    prompt: str
+
+@app.post("/v1/ai/explain")
+def explain_generalized(req: GeneralizedAnalysisRequest):
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Gemini API Key not configured")
+    
+    try:
+        from services.gemini import generate_generalized_explanation
+        explanation = generate_generalized_explanation(
+            api_key=api_key,
+            prompt=req.prompt
+        )
+        return explanation
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")

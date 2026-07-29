@@ -168,3 +168,31 @@ def generate_upi_explanation(
             "recommended_action": "Do not enter your PIN or proceed with the transaction.",
             "short_summary": "Suspicious Transaction"
         }
+
+def generate_generalized_explanation(
+    api_key: str,
+    prompt: str
+) -> dict:
+    if not api_key:
+        raise ValueError("Missing Gemini API credentials")
+        
+    client = genai.Client(api_key=api_key)
+    
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.1,
+            response_mime_type="application/json"
+        ),
+    )
+    
+    try:
+        data = json.loads(response.text)
+        return data
+    except json.JSONDecodeError:
+        return {
+            "simpleExplanation": "This interaction appears suspicious based on our offline rules.",
+            "reason": "Could not generate an AI explanation at this time.",
+            "recommendedAction": "Exercise extreme caution and do not provide personal info."
+        }

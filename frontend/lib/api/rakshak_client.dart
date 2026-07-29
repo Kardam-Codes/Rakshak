@@ -100,4 +100,23 @@ class RakshakClient {
       return null;
     }
   }
+
+  static Future<AiExplanation?> fetchGeneralizedExplanation(String prompt) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/v1/ai/explain'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'prompt': prompt,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        return AiExplanation.fromJson(jsonDecode(response.body));
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }
