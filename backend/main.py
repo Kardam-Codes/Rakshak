@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
-from services.gemini import generate_explanation, generate_call_explanation
+from services.gemini import generate_explanation, generate_call_explanation, generate_upi_explanation
 
 load_dotenv()
 
@@ -61,6 +61,36 @@ def explain_call(req: CallAnalysisRequest):
             confidence=req.confidence,
             matched_rules=req.matched_rules,
             call_duration=req.call_duration
+        )
+        return explanation
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+
+class UpiAnalysisRequest(BaseModel):
+    merchant_name: str
+    transaction_type: str
+    amount: float
+    category: str
+    risk: str
+    confidence: float
+    matched_rules: list[str]
+
+@app.post("/explain_upi")
+def explain_upi(req: UpiAnalysisRequest):
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Gemini API Key not configured")
+    
+    try:
+        explanation = generate_upi_explanation(
+            api_key=api_key,
+            merchant_name=req.merchant_name,
+            transaction_type=req.transaction_type,
+            amount=req.amount,
+            category=req.category,
+            risk=req.risk,
+            confidence=req.confidence,
+            matched_rules=req.matched_rules
         )
         return explanation
     except Exception as e:

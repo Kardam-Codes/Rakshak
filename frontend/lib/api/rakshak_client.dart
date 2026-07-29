@@ -67,4 +67,37 @@ class RakshakClient {
       return null;
     }
   }
+
+  static Future<AiExplanation?> fetchUpiExplanation({
+    required String merchantName,
+    required String transactionType,
+    required double amount,
+    required ScamCategory category,
+    required RiskLevel risk,
+    required double confidence,
+    required List<String> matchedRules,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/explain_upi'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'merchant_name': merchantName,
+          'transaction_type': transactionType,
+          'amount': amount,
+          'category': category.name,
+          'risk': risk.name,
+          'confidence': confidence,
+          'matched_rules': matchedRules,
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        return AiExplanation.fromJson(jsonDecode(response.body));
+      }
+       return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

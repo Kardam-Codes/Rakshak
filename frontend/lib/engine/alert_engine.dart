@@ -6,16 +6,18 @@ import 'models/risk_level.dart';
 import '../api/rakshak_client.dart';
 import '../utils/pii_masking.dart';
 import '../repositories/notification_repository.dart';
-import '../models/call_entity.dart';
 import '../repositories/call_repository.dart';
+import '../models/upi_transaction_entity.dart';
+import '../repositories/upi_repository.dart';
 
 class AlertEngine {
   final NotificationRepository _repository;
   final CallRepository _callRepository;
+  final UPIRepository _upiRepository;
   // A callback triggered to show native popup
   final Function(NotificationEntity)? onCriticalAlert;
 
-  AlertEngine(this._repository, this._callRepository, {this.onCriticalAlert});
+  AlertEngine(this._repository, this._callRepository, this._upiRepository, {this.onCriticalAlert});
 
   Future<void> processNotification(NotificationEntity entity) async {
     // 1. Generate hash for deduplication/caching based on content
@@ -132,6 +134,45 @@ class AlertEngine {
       }
     } catch (e) {
       debugPrint('Call AI Processing Failed: $e');
+    }
+  }
+
+  Future<void> processUPITransaction(UPITransactionEntity entity) async {
+    // fast path
+    if (entity.riskLevel == RiskLevel.safe || entity.riskLevel == RiskLevel.low) {
+       // already saved in service layer
+       return;
+    }
+
+    _processUpiAiAsync(entity);
+  }
+
+  Future<void> _processUpiAiAsync(UPITransactionEntity entity) async {
+    try {
+       // Masking UPI details
+       final maskedMerchant = PIIMasking.maskData(entity.merchantName);
+       
+       final explanation = await RakshakClient.fetchUpiExplanation(
+          merchantName: maskedMerchant,
+          transactionType: entity.transactionType.name,
+          amount: entity.amount,
+          category: entity.category,
+          risk: entity.riskLevel,
+          confidence: entity.confidence,
+          matchedRules: entity.matchedRules
+       );
+
+       if (explanation != null) {
+          if (entity.id != null) {
+             await _upiRepository.updateTransactionExplanation(
+                 entity.id!,
+                 "${explanation.simpleExplanation} ${explanation.reason}",
+                 explanation.recommendedAction
+             );
+          }
+       }
+    } catch (e) {
+       debugPrint('UPI AI Processing Failed: $e');
     }
   }
 }

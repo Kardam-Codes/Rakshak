@@ -10,7 +10,9 @@ import '../screens/settings/settings_screen.dart';
 import '../screens/alerts/notification_detail_screen.dart';
 import '../models/notification_entity.dart';
 import '../screens/history/call_detail_screen.dart';
+import '../screens/alerts/transaction_detail_screen.dart';
 import '../models/call_entity.dart';
+import '../models/upi_transaction_entity.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -40,6 +42,20 @@ final routerProvider = Provider<GoRouter>((ref) {
                     builder: (context, state) {
                       final notification = state.extra as NotificationEntity;
                       return NotificationDetailScreen(notification: notification);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'call_detail',
+                    builder: (context, state) {
+                      final call = state.extra as CallEntity;
+                      return CallDetailScreen(call: call);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'transaction_detail',
+                    builder: (context, state) {
+                      final transaction = state.extra as UPITransactionEntity;
+                      return TransactionDetailScreen(transaction: transaction);
                     },
                   ),
                 ],

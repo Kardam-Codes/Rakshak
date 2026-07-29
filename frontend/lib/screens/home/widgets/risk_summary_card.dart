@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../engine/models/risk_level.dart';
 import '../../../providers/notification_provider.dart';
 import '../../../providers/call_provider.dart';
+import '../../../providers/upi_provider.dart';
 import '../../../core/constants/spacing.dart';
 
 class RiskSummaryCard extends ConsumerWidget {
@@ -12,14 +13,16 @@ class RiskSummaryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationsAsync = ref.watch(notificationsProvider);
     final callsAsync = ref.watch(callsProvider);
+    final upiAsync = ref.watch(upiTransactionsProvider);
     
     // Simplistic loading state fallback
-    if (notificationsAsync.isLoading || callsAsync.isLoading) {
+    if (notificationsAsync.isLoading || callsAsync.isLoading || upiAsync.isLoading) {
        return const Center(child: CircularProgressIndicator());
     }
 
     final notifications = notificationsAsync.value ?? [];
     final calls = callsAsync.value ?? [];
+    final upis = upiAsync.value ?? [];
 
     final today = DateTime.now();
     
@@ -31,16 +34,23 @@ class RiskSummaryCard extends ConsumerWidget {
       c.timestamp.day == today.day && c.timestamp.month == today.month && c.timestamp.year == today.year
     ).toList();
     
+    final todayUpis = upis.where((u) => 
+      u.timestamp.day == today.day && u.timestamp.month == today.month && u.timestamp.year == today.year
+    ).toList();
+
     final safeCount = todayNotifications.where((n) => n.riskLevel == RiskLevel.safe).length +
-                      todayCalls.where((c) => c.riskLevel == RiskLevel.safe).length;
+                      todayCalls.where((c) => c.riskLevel == RiskLevel.safe).length +
+                      todayUpis.where((u) => u.riskLevel == RiskLevel.safe).length;
 
     final highCount = todayNotifications.where((n) => n.riskLevel == RiskLevel.high).length +
-                      todayCalls.where((c) => c.riskLevel == RiskLevel.high).length;
+                      todayCalls.where((c) => c.riskLevel == RiskLevel.high).length +
+                      todayUpis.where((u) => u.riskLevel == RiskLevel.high).length;
 
     final criticalCount = todayNotifications.where((n) => n.riskLevel == RiskLevel.critical).length +
-                          todayCalls.where((c) => c.riskLevel == RiskLevel.critical).length;
+                          todayCalls.where((c) => c.riskLevel == RiskLevel.critical).length +
+                          todayUpis.where((u) => u.riskLevel == RiskLevel.critical).length;
 
-    final total = todayNotifications.length + todayCalls.length;
+    final total = todayNotifications.length + todayCalls.length + todayUpis.length;
 
     return Card(
           color: Theme.of(context).colorScheme.primaryContainer,

@@ -12,7 +12,8 @@ class SupportedApps {
     'com.phonepe.app',
     'com.google.android.apps.nbu.paisa.user', // Google Pay
     'net.one97.paytm',           // Paytm
-    'in.org.npci.upiapp'         // BHIM
+    'in.org.npci.upiapp',        // BHIM
+    'in.amazon.mShop.android.shopping' // Amazon Pay
   ];
 
   static bool isSupported(String packageName) {
@@ -33,6 +34,8 @@ class SupportedApps {
     if (packageName == 'com.phonepe.app') return 'PhonePe';
     if (packageName == 'com.google.android.apps.nbu.paisa.user') return 'Google Pay';
     if (packageName == 'net.one97.paytm') return 'Paytm';
+    if (packageName == 'in.amazon.mShop.android.shopping') return 'Amazon Pay';
+    if (packageName == 'in.org.npci.upiapp') return 'BHIM';
     
     return 'Unknown App';
   }

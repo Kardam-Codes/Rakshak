@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../models/notification_entity.dart';
 import '../../models/call_entity.dart';
+import '../../models/upi_transaction_entity.dart';
 import '../../engine/models/risk_level.dart';
 import '../../engine/models/scam_category.dart';
+import '../../engine/models/transaction_type.dart';
 
 class NotificationEntityAdapter extends TypeAdapter<NotificationEntity> {
   @override
@@ -109,16 +111,80 @@ class CallEntityAdapter extends TypeAdapter<CallEntity> {
   }
 }
 
+class UPITransactionEntityAdapter extends TypeAdapter<UPITransactionEntity> {
+  @override
+  final int typeId = 2;
+
+  @override
+  UPITransactionEntity read(BinaryReader reader) {
+    final fields = reader.readMap();
+    return UPITransactionEntity(
+      id: fields['id'],
+      appName: fields['appName'] ?? '',
+      packageName: fields['packageName'] ?? '',
+      merchantName: fields['merchantName'] ?? '',
+      upiId: fields['upiId'] ?? '',
+      transactionType: TransactionType.values.firstWhere(
+        (e) => e.name == fields['transactionType'],
+        orElse: () => TransactionType.unknown
+      ),
+      amount: fields['amount'] ?? 0.0,
+      currency: fields['currency'] ?? 'INR',
+      timestamp: fields['timestamp'] ?? DateTime.now(),
+      riskLevel: RiskLevel.values.firstWhere(
+        (e) => e.name == fields['riskLevel'], 
+        orElse: () => RiskLevel.safe
+      ),
+      category: ScamCategory.values.firstWhere(
+        (e) => e.name == fields['category'], 
+        orElse: () => ScamCategory.unknown
+      ),
+      matchedRules: (fields['matchedRules'] as List?)?.cast<String>() ?? [],
+      confidence: fields['confidence'] ?? 0.0,
+      offlineReason: fields['offlineReason'] ?? '',
+      aiExplanation: fields['aiExplanation'],
+      recommendedAction: fields['recommendedAction'],
+      status: fields['status'] ?? 'pending',
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, UPITransactionEntity obj) {
+    writer.writeMap({
+      'id': obj.id,
+      'appName': obj.appName,
+      'packageName': obj.packageName,
+      'merchantName': obj.merchantName,
+      'upiId': obj.upiId,
+      'transactionType': obj.transactionType.name,
+      'amount': obj.amount,
+      'currency': obj.currency,
+      'timestamp': obj.timestamp,
+      'riskLevel': obj.riskLevel.name,
+      'category': obj.category.name,
+      'matchedRules': obj.matchedRules,
+      'confidence': obj.confidence,
+      'offlineReason': obj.offlineReason,
+      'aiExplanation': obj.aiExplanation,
+      'recommendedAction': obj.recommendedAction,
+      'status': obj.status,
+    });
+  }
+}
+
 class AppDatabase {
   static const String _boxName = 'notifications_box';
   static const String _callsBoxName = 'calls_box';
+  static const String _upiBoxName = 'upi_transactions_box';
 
   Future<void> init() async {
     await Hive.initFlutter();
     Hive.registerAdapter(NotificationEntityAdapter());
     Hive.registerAdapter(CallEntityAdapter());
+    Hive.registerAdapter(UPITransactionEntityAdapter());
     await Hive.openBox<NotificationEntity>(_boxName);
     await Hive.openBox<CallEntity>(_callsBoxName);
+    await Hive.openBox<UPITransactionEntity>(_upiBoxName);
   }
 
   Box<NotificationEntity> get _box => Hive.box<NotificationEntity>(_boxName);
@@ -210,6 +276,40 @@ class AppDatabase {
 
   Future<void> clearCalls() async {
     await _callsBox.clear();
+  }
+
+  // --- UPI Transaction Entity Methods ---
+  Box<UPITransactionEntity> get _upiBox => Hive.box<UPITransactionEntity>(_upiBoxName);
+
+  Stream<List<UPITransactionEntity>> get upiTransactionsStream async* {
+    yield _getAllUpiTransactionsSorted();
+    yield* _upiBox.watch().map((_) => _getAllUpiTransactionsSorted()).asBroadcastStream();
+  }
+
+  List<UPITransactionEntity> _getAllUpiTransactionsSorted() {
+    final list = _upiBox.values.toList()
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return list;
+  }
+
+  Future<int> insertUpiTransaction(UPITransactionEntity entity) async {
+    final id = await _upiBox.add(entity);
+    await _upiBox.put(id, entity.copyWith(id: id));
+    return id;
+  }
+
+  Future<void> updateUpiTransaction(UPITransactionEntity entity) async {
+    if (entity.id != null && _upiBox.containsKey(entity.id)) {
+      await _upiBox.put(entity.id!, entity);
+    }
+  }
+
+  Future<void> deleteUpiTransaction(int id) async {
+    await _upiBox.delete(id);
+  }
+
+  Future<void> clearUpiTransactions() async {
+    await _upiBox.clear();
   }
 }
 

@@ -3,16 +3,23 @@ import 'package:notification_listener_service/notification_listener_service.dart
 import 'package:notification_listener_service/notification_event.dart';
 import '../repositories/notification_repository.dart';
 import '../models/notification_entity.dart';
+import '../repositories/call_repository.dart';
 import '../config/supported_apps.dart';
 import '../engine/rule_engine.dart';
 import '../engine/alert_engine.dart';
+import '../services/upi_protection_service.dart';
+import '../repositories/upi_repository.dart';
 
 class NotificationService {
   final NotificationRepository _repository;
+  final CallRepository _callRepository;
+  final UPIRepository _upiRepository;
   late final AlertEngine _alertEngine;
+  late final UPIProtectionService _upiProtectionService;
 
-  NotificationService(this._repository) {
-    _alertEngine = AlertEngine(_repository, onCriticalAlert: _showCriticalPopupNative);
+  NotificationService(this._repository, this._callRepository, this._upiRepository) {
+    _alertEngine = AlertEngine(_repository, _callRepository, _upiRepository, onCriticalAlert: _showCriticalPopupNative);
+    _upiProtectionService = UPIProtectionService(_upiRepository, _alertEngine);
   }
 
   void _showCriticalPopupNative(NotificationEntity entity) {
@@ -73,6 +80,9 @@ class NotificationService {
       );
 
       _alertEngine.processNotification(entity);
+
+      // Branch to UPI protection logic
+      _upiProtectionService.processUPINotification(entity);
     } else {
       developer.log('Notification ignored from: $packageName');
     }

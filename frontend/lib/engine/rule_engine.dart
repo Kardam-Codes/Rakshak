@@ -2,6 +2,7 @@ import 'models/scam_rule.dart';
 import 'models/scam_category.dart';
 import 'models/detection_result.dart';
 import 'models/risk_level.dart';
+import 'models/transaction_type.dart';
 import 'risk_calculator.dart';
 import 'rules/otp_rules.dart';
 import 'rules/kyc_rules.dart';
@@ -161,6 +162,100 @@ class RuleEngine {
       confidence: 0.9,
       category: matchedRules.isEmpty ? ScamCategory.unknown : primaryCategory,
       matchedRules: matchedRules.map((r) => r.id).toList(),
+      reason: reason,
+      recommendedAction: action,
+      timestamp: DateTime.now(),
+    );
+  }
+
+  static DetectionResult analyzeUPI({
+    required String merchantName,
+    required String upiId,
+    required TransactionType type,
+    required double amount,
+    required String title,
+    required String body,
+    bool isKnownContact = false,
+  }) {
+    // 1. Run standard textual analysis (including UPI rules like KYC, Reward, Urgent)
+    DetectionResult baseResult = analyze(title, body);
+
+    List<ScamRule> additionalRules = [];
+    ScamCategory primaryCategory = baseResult.category;
+
+    // 2. Evaluate UPI-specific situational characteristics
+    if (!isKnownContact && upiId.isNotEmpty) {
+      final unknownRule = upiRules.firstWhere((r) => r.id == 'UPI_UNKNOWN_ID', orElse: () => upiRules.first);
+      if (unknownRule.id == 'UPI_UNKNOWN_ID') {
+         additionalRules.add(unknownRule);
+      }
+    }
+
+    if (type == TransactionType.collectRequest) {
+      final collectRule = upiRules.firstWhere((r) => r.id == 'UPI_COLLECT_REQUEST', orElse: () => upiRules.first);
+      if (collectRule.id == 'UPI_COLLECT_REQUEST') {
+         additionalRules.add(collectRule);
+         primaryCategory = ScamCategory.collectRequest;
+      }
+    }
+
+    // High amount without known contact
+    if (amount > 10000 && !isKnownContact) {
+      additionalRules.add(const ScamRule(
+        id: 'UPI_HIGH_AMOUNT',
+        name: 'High Amount Transfer',
+        description: 'Large transaction requested to unknown entity.',
+        keywords: [],
+        weight: 25,
+        category: ScamCategory.unknown,
+        recommendedAction: 'Verify the identity of the recipient before proceeding with a large transfer.',
+      ));
+    }
+
+    // Combine rules
+    List<String> allMatchedIds = List.from(baseResult.matchedRules);
+    for (var rule in additionalRules) {
+      if (!allMatchedIds.contains(rule.id)) {
+        allMatchedIds.add(rule.id);
+      }
+    }
+
+    // Re-calculate risk (We need full ScamRule object for RiskCalculator, so we need to fetch them from base)
+    List<ScamRule> activeRules = _allRules.where((r) => allMatchedIds.contains(r.id)).toList();
+    if (additionalRules.any((r) => r.id == 'UPI_HIGH_AMOUNT')) {
+       activeRules.add(additionalRules.firstWhere((r) => r.id == 'UPI_HIGH_AMOUNT'));
+    }
+
+    var finalRiskLevel = RiskCalculator.calculateRiskLevel(activeRules);
+
+    // Dampen risk if known contact
+    if (isKnownContact && finalRiskLevel != RiskLevel.safe) {
+      if (finalRiskLevel == RiskLevel.critical) finalRiskLevel = RiskLevel.high;
+      else if (finalRiskLevel == RiskLevel.high) finalRiskLevel = RiskLevel.medium;
+      else finalRiskLevel = RiskLevel.low;
+    } else if (!isKnownContact && type == TransactionType.collectRequest) {
+      // Force high risk for any unknown collect request
+      if (finalRiskLevel == RiskLevel.safe || finalRiskLevel == RiskLevel.low || finalRiskLevel == RiskLevel.medium) {
+         finalRiskLevel = RiskLevel.high;
+      }
+    }
+
+    String reason = 'UPI transaction appears safe.';
+    String action = 'Proceed normally.';
+
+    if (activeRules.isNotEmpty) {
+       activeRules.sort((a,b) => b.weight.compareTo(a.weight));
+       reason = 'Detected risk logic: ${activeRules.map((e) => e.name).join(', ')}.';
+       action = activeRules.first.recommendedAction;
+    }
+
+    double confidence = activeRules.isEmpty ? 1.0 : (activeRules.length * 0.25).clamp(0.0, 0.95);
+
+    return DetectionResult(
+      riskLevel: finalRiskLevel,
+      confidence: confidence,
+      category: activeRules.isEmpty ? ScamCategory.unknown : (primaryCategory != ScamCategory.unknown ? primaryCategory : activeRules.first.category),
+      matchedRules: allMatchedIds,
       reason: reason,
       recommendedAction: action,
       timestamp: DateTime.now(),
