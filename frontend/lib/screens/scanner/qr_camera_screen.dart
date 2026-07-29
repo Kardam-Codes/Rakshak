@@ -111,26 +111,11 @@ class _QrCameraScreenState extends State<QrCameraScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: ValueListenableBuilder<TorchState>(
-              valueListenable: _controller.torchState,
-              builder: (context, state, child) {
-                switch (state) {
-                  case TorchState.off:
-                    return const Icon(Icons.flash_off);
-                  case TorchState.on:
-                    return const Icon(Icons.flash_on, color: Colors.yellow);
-                }
-              },
-            ),
+            icon: const Icon(Icons.flash_on),
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
-            icon: ValueListenableBuilder<CameraFacing>(
-              valueListenable: _controller.cameraFacingState,
-              builder: (context, state, child) {
-                return const Icon(Icons.cameraswitch);
-              },
-            ),
+            icon: const Icon(Icons.cameraswitch),
             onPressed: () => _controller.switchCamera(),
           ),
         ],

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/scan_entity.dart';
-import '../models/risk_level.dart';
-import '../engine/rule_engine.dart';
+import 'models/risk_level.dart';
+import 'rule_engine.dart';
 import '../repositories/scan_repository.dart';
 import '../services/scan_analytics_service.dart';
 

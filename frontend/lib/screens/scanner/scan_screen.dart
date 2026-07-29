@@ -8,6 +8,8 @@ import '../../core/constants/colors.dart';
 import '../../core/constants/spacing.dart';
 import '../../models/scan_entity.dart';
 import '../../providers/scan_provider.dart';
+import '../../engine/models/risk_level.dart';
+import '../../engine/models/scam_category.dart';
 
 class ScanScreen extends ConsumerStatefulWidget {
   const ScanScreen({super.key});

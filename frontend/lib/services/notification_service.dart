@@ -7,12 +7,15 @@ import '../config/supported_apps.dart';
 import '../engine/rule_engine.dart';
 import '../engine/alert_engine.dart';
 
+import '../repositories/call_repository.dart';
+import '../core/database/app_database.dart';
+
 class NotificationService {
   final NotificationRepository _repository;
   late final AlertEngine _alertEngine;
 
   NotificationService(this._repository) {
-    _alertEngine = AlertEngine(_repository, onCriticalAlert: _showCriticalPopupNative);
+    _alertEngine = AlertEngine(_repository, CallRepository(AppDatabase()), onCriticalAlert: _showCriticalPopupNative);
   }
 
   void _showCriticalPopupNative(NotificationEntity entity) {
