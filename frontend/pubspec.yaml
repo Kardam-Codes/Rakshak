@@ -27,6 +27,11 @@ dependencies:
   crypto: ^3.0.7
   phone_state: ^3.0.1
   flutter_overlay_window: ^0.5.0
+  mobile_scanner: ^5.2.3
+  image_picker: ^1.1.2
+  google_mlkit_text_recognition: ^0.13.0
+  permission_handler: ^11.3.1
+  share_plus: ^10.0.2
 
 dev_dependencies:
   flutter_test:
