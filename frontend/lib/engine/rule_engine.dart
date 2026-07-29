@@ -1,0 +1,170 @@
+import 'models/scam_rule.dart';
+import 'models/scam_category.dart';
+import 'models/detection_result.dart';
+import 'models/risk_level.dart';
+import 'risk_calculator.dart';
+import 'rules/otp_rules.dart';
+import 'rules/kyc_rules.dart';
+import 'rules/lottery_rules.dart';
+import 'rules/upi_rules.dart';
+import 'rules/loan_rules.dart';
+import 'rules/refund_rules.dart';
+import 'rules/investment_rules.dart';
+import 'rules/general_rules.dart';
+import 'rules/call_rules.dart';
+
+class RuleEngine {
+  static final List<ScamRule> _allRules = [
+    ...otpRules,
+    ...kycRules,
+    ...lotteryRules,
+    ...upiRules,
+    ...loanRules,
+    ...refundRules,
+    ...investmentRules,
+    ...generalRules,
+  ];
+
+  static DetectionResult analyze(String title, String body) {
+    final combinedText = '$title $body';
+    // Normalize string: Lowercase, remove basic punctuation for clean keyword matching.
+    // Keeps alphanumeric and Gujarati unicode block (U+0A80 - U+0AFF).
+    final normalizedText = combinedText
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^\w\s\u0A80-\u0AFF]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ');
+
+    List<ScamRule> matchedRules = [];
+    ScamCategory primaryCategory = ScamCategory.unknown;
+
+    for (var rule in _allRules) {
+      if (!rule.enabled) continue;
+
+      bool isMatch = false;
+
+      // Regex matching
+      if (rule.regex != null) {
+        final regex = RegExp(rule.regex!, caseSensitive: false, unicode: true);
+        if (regex.hasMatch(combinedText)) {
+          isMatch = true;
+        }
+      }
+
+      // Keyword matching
+      if (!isMatch) {
+         for (var keyword in rule.keywords) {
+           final normalizedKeyword = keyword.toLowerCase();
+           // Strict word boundary check might fail with Gujarati, simple contains is safer 
+           // when punctuation is already stripped.
+           if (normalizedText.contains(normalizedKeyword)) {
+             isMatch = true;
+             break;
+           }
+         }
+      }
+
+      if (isMatch) {
+        matchedRules.add(rule);
+        // Determine the most specific category (not unknown) from matches
+        if (primaryCategory == ScamCategory.unknown && rule.category != ScamCategory.unknown) {
+          primaryCategory = rule.category;
+        }
+      }
+    }
+
+    final riskLevel = RiskCalculator.calculateRiskLevel(matchedRules);
+    
+    // Compile reason string
+    String reason = 'Message appears safe.';
+    String action = 'No action required.';
+    
+    if (matchedRules.isNotEmpty) {
+      final names = matchedRules.map((r) => r.name).join(', ');
+      reason = 'Detected potential risk patterns: $names.';
+      
+      // Select action from highest weighted rule
+      matchedRules.sort((a, b) => b.weight.compareTo(a.weight));
+      action = matchedRules.first.recommendedAction;
+    }
+
+    final confidence = matchedRules.isEmpty ? 1.0 : (matchedRules.length * 0.2).clamp(0.0, 0.95);
+
+    return DetectionResult(
+      riskLevel: riskLevel,
+      confidence: confidence,
+      category: matchedRules.isEmpty ? ScamCategory.unknown : primaryCategory,
+      matchedRules: matchedRules.map((r) => r.id).toList(),
+      reason: reason,
+      recommendedAction: action,
+      timestamp: DateTime.now(),
+    );
+  }
+
+  static DetectionResult analyzeCall(String phoneNumber, double reputation, {bool isKnownContact = false}) {
+    List<ScamRule> matchedRules = [];
+    ScamCategory primaryCategory = ScamCategory.unknown;
+
+    if (!isKnownContact) {
+      for (var rule in callRules) {
+        if (!rule.enabled) continue;
+        bool isMatch = false;
+
+        if (rule.id == 'CALL_UNKNOWN_01' && (phoneNumber.startsWith('+1') || phoneNumber.startsWith('+44') || phoneNumber.startsWith('+92'))) {
+          isMatch = true;
+        } else if (rule.id == 'CALL_ROBOCALL_PREFIX' && phoneNumber.startsWith('140')) {
+          isMatch = true;
+        } else if (rule.id == 'CALL_HIDDEN' && (phoneNumber.isEmpty || phoneNumber.toLowerCase() == 'unknown' || phoneNumber.toLowerCase() == 'private')) {
+          isMatch = true;
+        }
+
+        if (isMatch) {
+          matchedRules.add(rule);
+          primaryCategory = rule.category;
+        }
+      }
+    }
+
+    if (reputation < 0.3) {
+      matchedRules.add(const ScamRule(
+        id: 'CALL_LOW_REP',
+        name: 'Low Reputation Score',
+        description: 'Number flagged by reputation network',
+        keywords: [],
+        weight: 35,
+        category: ScamCategory.unknown,
+        recommendedAction: 'Do not answer or engage. Number is flagged by community.',
+      ));
+    }
+
+    var riskLevel = RiskCalculator.calculateRiskLevel(matchedRules);
+    
+    // Reduce risk if known contact
+    if (isKnownContact && riskLevel != RiskLevel.safe) {
+      if (riskLevel == RiskLevel.critical) riskLevel = RiskLevel.high;
+      else if (riskLevel == RiskLevel.high) riskLevel = RiskLevel.medium;
+      else riskLevel = RiskLevel.low;
+    }
+
+    String reason = 'Call appears safe.';
+    String action = 'No action required.';
+    
+    if (matchedRules.isNotEmpty) {
+      final names = matchedRules.map((r) => r.name).join(', ');
+      reason = 'Detected potential risk patterns: $names.';
+      
+      matchedRules.sort((a, b) => b.weight.compareTo(a.weight));
+      action = matchedRules.first.recommendedAction;
+    }
+
+    return DetectionResult(
+      riskLevel: riskLevel,
+      confidence: 0.9,
+      category: matchedRules.isEmpty ? ScamCategory.unknown : primaryCategory,
+      matchedRules: matchedRules.map((r) => r.id).toList(),
+      reason: reason,
+      recommendedAction: action,
+      timestamp: DateTime.now(),
+    );
+  }
+}
+

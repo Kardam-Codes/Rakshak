@@ -9,6 +9,8 @@ import '../screens/history/history_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/alerts/notification_detail_screen.dart';
 import '../models/notification_entity.dart';
+import '../screens/history/call_detail_screen.dart';
+import '../models/call_entity.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -56,7 +58,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/history',
-                builder: (context, state) => const HistoryScreen(),
+                builder: (context, state) => const HistoryScreen(), // Switch to CallHistoryScreen if needed
+                routes: [
+                  GoRoute(
+                    path: 'call_detail',
+                    builder: (context, state) {
+                      final call = state.extra as CallEntity;
+                      return CallDetailScreen(call: call);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

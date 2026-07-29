@@ -3,16 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/notification_entity.dart';
 import '../../core/constants/spacing.dart';
 import '../../providers/notification_provider.dart';
+import '../../widgets/risk_badge.dart';
+import '../../engine/models/scam_category.dart';
+import '../../engine/models/risk_level.dart';
 
 class NotificationDetailScreen extends ConsumerWidget {
   final NotificationEntity notification;
 
-  const NotificationDetailScreen({super.key, required this.notification});
+  const NotificationDetailScreen({Key? key, required this.notification}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!notification.isRead && notification.id != null) {
-      // Mark as read immediately when viewed, but safely inside a post-frame callback
       WidgetsBinding.instance.addPostFrameCallback((_) {
         try {
           final db = ref.read(appDatabaseProvider);
@@ -20,6 +22,8 @@ class NotificationDetailScreen extends ConsumerWidget {
         } catch (_) {}
       });
     }
+
+    final isSafe = notification.riskLevel == RiskLevel.safe;
 
     return Scaffold(
       appBar: AppBar(
@@ -52,6 +56,7 @@ class NotificationDetailScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+              RiskBadge(riskLevel: notification.riskLevel),
             ],
           ),
           const SizedBox(height: AppSpacing.s24),
@@ -67,6 +72,123 @@ class NotificationDetailScreen extends ConsumerWidget {
           Text(
             notification.body,
             style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: AppSpacing.s32),
+          Text(
+            'Analysis Strategy',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          
+          _buildInfoRow(context, 'Category', notification.category.displayName),
+          
+          if (!isSafe && notification.matchedRules.isNotEmpty)
+             _buildInfoRow(context, 'Matched Rules', notification.matchedRules.join(', ')),
+
+          _buildInfoRow(context, 'Reason', notification.reason),
+          
+          if (!isSafe) ... [
+             const SizedBox(height: AppSpacing.s16),
+             if (notification.aiSimpleExplanation == null && notification.riskLevel.index >= RiskLevel.medium.index) ... [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.s16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: AppSpacing.s16),
+                      Text(
+                        'AI Scam Guardian is analyzing...',
+                        style: TextStyle(color: Theme.of(context).colorScheme.onTertiaryContainer, fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  ),
+                )
+             ] else if (notification.aiSimpleExplanation != null) ... [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.s16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Theme.of(context).colorScheme.secondary.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.secondary),
+                          const SizedBox(width: AppSpacing.s8),
+                          Text('AI Explanation', style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.secondary,
+                            fontWeight: FontWeight.bold,
+                          )),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.s16),
+                      Text(
+                        notification.aiSimpleExplanation!,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: AppSpacing.s8),
+                      Text(notification.aiReason!),
+                      const SizedBox(height: AppSpacing.s16),
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.s16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.shield_outlined, size: 20, color: Theme.of(context).colorScheme.error),
+                            const SizedBox(width: AppSpacing.s8),
+                            Expanded(child: Text(
+                              notification.aiRecommendedAction!,
+                              style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.bold),
+                            ))
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                )
+             ],
+          ]
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ),
         ],
       ),

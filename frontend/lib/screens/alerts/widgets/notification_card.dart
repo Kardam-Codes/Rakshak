@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../models/notification_entity.dart';
 import '../../../core/constants/spacing.dart';
+import '../../../widgets/risk_badge.dart';
+import '../../../engine/models/scam_category.dart';
 
 class NotificationCard extends StatelessWidget {
   final NotificationEntity notification;
@@ -53,13 +55,21 @@ class NotificationCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.s8),
-              Text(
-                notification.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      notification.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.s8),
+                  RiskBadge(riskLevel: notification.riskLevel),
+                ],
               ),
               const SizedBox(height: AppSpacing.s4),
               Text(
@@ -67,6 +77,13 @@ class NotificationCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: AppSpacing.s8),
+              Text(
+                notification.category.displayName,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),

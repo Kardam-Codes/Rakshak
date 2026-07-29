@@ -4,11 +4,20 @@ import 'package:notification_listener_service/notification_event.dart';
 import '../repositories/notification_repository.dart';
 import '../models/notification_entity.dart';
 import '../config/supported_apps.dart';
+import '../engine/rule_engine.dart';
+import '../engine/alert_engine.dart';
 
 class NotificationService {
   final NotificationRepository _repository;
+  late final AlertEngine _alertEngine;
 
-  NotificationService(this._repository);
+  NotificationService(this._repository) {
+    _alertEngine = AlertEngine(_repository, onCriticalAlert: _showCriticalPopupNative);
+  }
+
+  void _showCriticalPopupNative(NotificationEntity entity) {
+     // Triggered into UI loop asynchronously if mapped via global navigation keys
+  }
 
   Future<bool> checkPermission() async {
     try {
@@ -48,6 +57,8 @@ class NotificationService {
     if (SupportedApps.isSupported(packageName)) {
       final appName = SupportedApps.getAppName(packageName, packageName);
       
+      final detection = RuleEngine.analyze(title, body);
+
       final entity = NotificationEntity(
         appName: appName,
         packageName: packageName,
@@ -55,13 +66,13 @@ class NotificationService {
         body: body,
         timestamp: DateTime.now(),
         isRead: false,
+        riskLevel: detection.riskLevel,
+        category: detection.category,
+        matchedRules: detection.matchedRules,
+        reason: detection.reason,
       );
 
-      _repository.saveNotification(entity).then((_) {
-        developer.log('Notification stored: $packageName');
-      }).catchError((e) {
-        developer.log('Error saving notification', error: e);
-      });
+      _alertEngine.processNotification(entity);
     } else {
       developer.log('Notification ignored from: $packageName');
     }

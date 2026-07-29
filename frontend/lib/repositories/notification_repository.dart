@@ -10,7 +10,7 @@ class NotificationRepository {
     return _db.notificationsStream;
   }
 
-  Future<void> saveNotification(NotificationEntity entity) {
+  Future<int> saveNotification(NotificationEntity entity) {
     return _db.insertNotification(entity);
   }
 
@@ -20,5 +20,13 @@ class NotificationRepository {
 
   Future<void> clearNotifications() {
     return _db.clearNotifications();
+  }
+
+  Future<NotificationEntity?> findNotificationByHashWithAi(String hash) {
+    return _db.findNotificationByHashWithAi(hash);
+  }
+
+  Future<void> updateNotification(NotificationEntity entity) {
+    return _db.updateNotification(entity);
   }
 }
