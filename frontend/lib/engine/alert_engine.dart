@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import '../models/notification_entity.dart';
+import '../models/call_entity.dart';
 import 'models/risk_level.dart';
 import '../api/rakshak_client.dart';
 import '../utils/pii_masking.dart';

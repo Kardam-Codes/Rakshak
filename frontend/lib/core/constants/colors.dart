@@ -23,6 +23,8 @@ class AppColors {
   static const Color dividerDark = Color(0xFF333333);
 
   // Typography
+  static const Color textPrimary = Color(0xFF1E293B);
+  static const Color textSecondary = Color(0xFF64748B);
   static const Color textPrimaryLight = Color(0xFF1E293B);
   static const Color textSecondaryLight = Color(0xFF64748B);
   static const Color textPrimaryDark = Color(0xFFE2E8F0);

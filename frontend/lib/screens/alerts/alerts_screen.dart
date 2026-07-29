@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/call_provider.dart';
 import '../../providers/upi_provider.dart';
+import '../../models/notification_entity.dart';
+import '../../models/call_entity.dart';
 import '../../widgets/empty_state.dart';
 import '../../core/constants/icons.dart';
 import '../../core/constants/spacing.dart';
 import '../../widgets/upi_alert_card.dart';
-import '../home/widgets/call_card.dart';
+import '../../widgets/call_card.dart';
 import 'widgets/notification_card.dart';
 
 class AlertsScreen extends ConsumerStatefulWidget {
@@ -80,12 +82,12 @@ class AlertsScreenState extends ConsumerState<AlertsScreen> {
                              itemCount: combined.length,
                              itemBuilder: (context, index) {
                                final item = combined[index];
-                               if (item is \NotificationEntity) {
+                               if (item is NotificationEntity) {
                                   return NotificationCard(
                                     notification: item,
                                     onTap: () => context.push('/alerts/notification_detail', extra: item),
                                   );
-                               } else if (item is \CallEntity) {
+                               } else if (item is CallEntity) {
                                   return CallCard(
                                     call: item,
                                     onTap: () => context.push('/alerts/call_detail', extra: item),
