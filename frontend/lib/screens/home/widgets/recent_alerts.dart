@@ -24,7 +24,7 @@ class RecentAlerts extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () => context.go('/alerts'),
               child: const Text('View All'),
             ),
           ],

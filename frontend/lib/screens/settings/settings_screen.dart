@@ -6,7 +6,6 @@ import '../../core/constants/spacing.dart';
 import '../../core/constants/icons.dart';
 import '../../widgets/section_title.dart';
 import '../../providers/notification_provider.dart';
-import '../../core/constants/colors.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -40,6 +39,29 @@ class SettingsScreen extends ConsumerWidget {
                     },
                     child: const Text('Request'),
                   ),
+          ),
+          ListTile(
+            title: const Text('Notification Listener'),
+            subtitle: const Text('Restart listener and resync active notifications'),
+            trailing: OutlinedButton(
+              onPressed: () async {
+                final notifier = ref.read(notificationPermissionProvider.notifier);
+                await notifier.refreshListener();
+                final connected = await notifier.isServiceConnected();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        connected
+                            ? 'Notification listener is connected.'
+                            : 'Listener refreshed. Toggle Notification Access off/on if it still stays disconnected.',
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Refresh'),
+            ),
           ),
           const Divider(),
           const SectionTitle(title: 'General'),

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../models/notification_entity.dart';
 import '../models/call_entity.dart';
 import 'models/risk_level.dart';
+import 'models/scam_category.dart';
 import '../api/rakshak_client.dart';
 import '../utils/pii_masking.dart';
 import '../repositories/notification_repository.dart';
@@ -30,6 +31,18 @@ class AlertEngine {
 
     // Attach hash
     var currentEntity = entity.copyWith(notificationHash: contentHash);
+    final existingRecord = await _repository.findNotificationByHash(contentHash);
+    if (existingRecord != null) {
+      final updatedEntity = currentEntity.copyWith(
+        id: existingRecord.id,
+        isRead: existingRecord.isRead,
+        aiSimpleExplanation: existingRecord.aiSimpleExplanation,
+        aiReason: existingRecord.aiReason,
+        aiRecommendedAction: existingRecord.aiRecommendedAction,
+      );
+      await _repository.updateNotification(updatedEntity);
+      return;
+    }
 
     // 2. Fast Path: If Safe/Low, just save and exit to avoid AI overhead
     if (currentEntity.riskLevel == RiskLevel.safe || currentEntity.riskLevel == RiskLevel.low) {

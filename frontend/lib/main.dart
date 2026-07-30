@@ -30,6 +30,7 @@ class RakshakApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    ref.watch(notificationPermissionProvider);
 
     return MaterialApp.router(
       title: AppStrings.appName,

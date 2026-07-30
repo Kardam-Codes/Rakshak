@@ -9,40 +9,38 @@ class SafetyTipsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+    return Card(
+      elevation: 0,
+      color: AppColors.surfaceLight,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.textSecondary.withOpacity(0.18)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.info_outline, color: AppColors.primary),
-              const SizedBox(width: AppSpacing.s12),
-              Text(
-                "Safety Tips",
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.s12),
-          ...tips.map((tip) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.s8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("• ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Expanded(child: Text(tip, style: const TextStyle(fontSize: 14))),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.s16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Safety Tips',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-          )).toList(),
-        ],
+            const SizedBox(height: AppSpacing.s12),
+            for (final tip in tips) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.check_circle_outline, size: 18, color: AppColors.success),
+                  const SizedBox(width: AppSpacing.s8),
+                  Expanded(child: Text(tip)),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.s8),
+            ],
+          ],
+        ),
       ),
     );
   }

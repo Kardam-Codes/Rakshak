@@ -6,6 +6,8 @@ class NotificationRepository {
 
   NotificationRepository(this._db);
 
+  AppDatabase get database => _db;
+
   Stream<List<NotificationEntity>> watchNotifications() {
     return _db.notificationsStream;
   }
@@ -24,6 +26,10 @@ class NotificationRepository {
 
   Future<NotificationEntity?> findNotificationByHashWithAi(String hash) {
     return _db.findNotificationByHashWithAi(hash);
+  }
+
+  Future<NotificationEntity?> findNotificationByHash(String hash) async {
+    return _db.findNotificationByHash(hash);
   }
 
   Future<void> updateNotification(NotificationEntity entity) {
