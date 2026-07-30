@@ -54,16 +54,16 @@ class NotificationService {
   void _showCriticalToast({required String title, required String category, required RiskLevel riskLevel}) async {
     // 1. Always attempt to trigger the universal background overlay for OTPs specifically
     if (category == ScamCategory.otpScam.name) {
-      if (await FlutterOverlayWindow.isPermissionGranted()) {
-        await FlutterOverlayWindow.showOverlay(
+      if (await fo.FlutterOverlayWindow.isPermissionGranted()) {
+        await fo.FlutterOverlayWindow.showOverlay(
           enableDrag: true,
           overlayTitle: "Rakshak OTP Security",
           overlayContent: "OTP: $title",
-          flag: OverlayFlag.defaultFlag,
-          visibility: NotificationVisibility.visibilityPublic,
+          flag: fo.OverlayFlag.defaultFlag,
+          visibility: fo.NotificationVisibility.visibilityPublic,
         );
         // Share data payload for the generic overlay to decode
-        FlutterOverlayWindow.shareData('OTP: $title');
+        fo.FlutterOverlayWindow.shareData('OTP: $title');
       }
     }
 
