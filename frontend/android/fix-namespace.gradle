@@ -1,0 +1,5 @@
+if (project.hasProperty('android')) {
+    if (project.android.namespace == null) {
+        project.android.namespace = project.group
+    }
+}
