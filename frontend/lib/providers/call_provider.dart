@@ -18,7 +18,7 @@ final callsProvider = StreamProvider<List<CallEntity>>((ref) {
 });
 
 final numberReputationServiceProvider = Provider<NumberReputationService>((ref) {
-  return NumberReputationService();
+  return MockReputationService();
 });
 
 final callDetectionServiceProvider = Provider<CallDetectionService>((ref) {
