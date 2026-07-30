@@ -18,7 +18,7 @@ class AlertEngine {
   final UPIRepository _upiRepository;
   final ExplainabilityEngine _explainEngine;
   // A callback triggered to show native popup
-  final Function(NotificationEntity)? onCriticalAlert;
+  final Function({required String title, required String category, required RiskLevel riskLevel})? onCriticalAlert;
 
   AlertEngine(this._repository, this._callRepository, this._upiRepository, this._explainEngine, {this.onCriticalAlert});
 
@@ -67,7 +67,11 @@ class AlertEngine {
   void _triggerPopupIfCritical(NotificationEntity entity) {
     if (onCriticalAlert != null) {
       if (entity.riskLevel == RiskLevel.high || entity.riskLevel == RiskLevel.critical) {
-        onCriticalAlert!(entity);
+        onCriticalAlert!(
+           title: entity.title,
+           category: entity.category.name,
+           riskLevel: entity.riskLevel,
+        );
       }
     }
   }
@@ -109,9 +113,19 @@ class AlertEngine {
 
     // 2. Save immediately for UI
     final savedId = await _callRepository.saveCall(entity);
-    final currentEntity = entity.copyWith(id: savedId);
-
     // 3. Trigger Async processing
+    final currentEntity = entity.copyWith(id: savedId);
+    
+    if (currentEntity.riskLevel == RiskLevel.high || currentEntity.riskLevel == RiskLevel.critical) {
+      if (onCriticalAlert != null) {
+        onCriticalAlert!(
+          title: 'Scam Call from ${currentEntity.phoneNumber}',
+          category: currentEntity.category.name,
+          riskLevel: currentEntity.riskLevel,
+        );
+      }
+    }
+
     _processCallAiAsync(currentEntity);
   }
 
@@ -141,6 +155,16 @@ class AlertEngine {
     if (entity.riskLevel == RiskLevel.safe || entity.riskLevel == RiskLevel.low) {
        // already saved in service layer
        return;
+    }
+
+    if (entity.riskLevel == RiskLevel.high || entity.riskLevel == RiskLevel.critical) {
+      if (onCriticalAlert != null) {
+        onCriticalAlert!(
+          title: 'UPI Payment to ${entity.merchantName}',
+          category: entity.category.name,
+          riskLevel: entity.riskLevel,
+        );
+      }
     }
 
     _processUpiAiAsync(entity);

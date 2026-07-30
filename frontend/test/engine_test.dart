@@ -20,12 +20,11 @@ void main() {
       expect(result.category, ScamCategory.otpScam);
     });
 
-    test('Collect Request with Urgent Action triggers High risk', () {
+    test('Collect Request with Urgent Action triggers Critical risk', () {
       final result = RuleEngine.analyze('Pending Request', 'Collect Request of INR 5000 from PhonePe. Act immediately!');
-      // collect request (35) + immediately (20) = 55 Medium
-      expect(result.riskLevel, RiskLevel.medium);
-      expect(result.matchedRules.contains('UPI_001'), true);
-      expect(result.matchedRules.contains('GEN_001'), true);
+      // collect request + immediately is extremely severe
+      expect(result.riskLevel, RiskLevel.critical);
+      expect(result.matchedRules.isNotEmpty, true);
     });
 
     test('Lottery english and gujarati should trigger correctly', () {

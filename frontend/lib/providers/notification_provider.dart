@@ -4,24 +4,10 @@ import '../core/database/app_database.dart';
 import '../repositories/notification_repository.dart';
 import '../services/notification_service.dart';
 import '../models/notification_entity.dart';
+import 'database_provider.dart';
 import 'call_provider.dart';
 import 'upi_provider.dart';
-import '../repositories/explainability_repository.dart';
-import '../engine/explainability/explainability_engine.dart';
-
-final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  return AppDatabase();
-});
-
-final explainabilityRepositoryProvider = Provider<ExplainabilityRepository>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  return ExplainabilityRepository(db);
-});
-
-final explainabilityEngineProvider = Provider<ExplainabilityEngine>((ref) {
-  final repo = ref.watch(explainabilityRepositoryProvider);
-  return ExplainabilityEngine(repo);
-});
+import 'trusted_family_provider.dart';
 
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -32,8 +18,8 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   final repo = ref.watch(notificationRepositoryProvider);
   final callRepo = ref.watch(callRepositoryProvider);
   final upiRepo = ref.watch(upiRepositoryProvider);
-  final explainEngine = ref.watch(explainabilityEngineProvider);
-  return NotificationService(repo, callRepo, upiRepo, explainEngine);
+  final trustedFamilyService = ref.watch(trustedFamilyServiceProvider);
+  return NotificationService(repo, callRepo, upiRepo, trustedFamilyService);
 });
 
 final notificationsProvider = StreamProvider<List<NotificationEntity>>((ref) {
@@ -74,6 +60,7 @@ class NotificationPermissionNotifier extends StateNotifier<bool> with WidgetsBin
     }
     if (isGranted) {
       _service.startListening();
+      await _service.syncExistingNotifications();
     }
   }
 

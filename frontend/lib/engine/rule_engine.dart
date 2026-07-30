@@ -13,6 +13,8 @@ import 'rules/refund_rules.dart';
 import 'rules/investment_rules.dart';
 import 'rules/general_rules.dart';
 import 'rules/call_rules.dart';
+import 'rules/scan_rules.dart';
+import '../models/scan_entity.dart';
 
 class RuleEngine {
   static final List<ScamRule> _allRules = [
@@ -24,6 +26,7 @@ class RuleEngine {
     ...refundRules,
     ...investmentRules,
     ...generalRules,
+    ...scanRules,
   ];
 
   static DetectionResult analyze(String title, String body) {
@@ -261,5 +264,82 @@ class RuleEngine {
       timestamp: DateTime.now(),
     );
   }
+
+  static DetectionResult analyzeScan(String content, ScanType type) {
+    final cleanContent = content.trim();
+    final lowerContent = cleanContent.toLowerCase();
+
+    List<ScamRule> matchedRules = [];
+    ScamCategory primaryCategory = ScamCategory.unknown;
+
+    // Run against all rules
+    for (var rule in _allRules) {
+      if (!rule.enabled) continue;
+      bool isMatch = false;
+
+      // Regex match
+      if (rule.regex != null) {
+        try {
+          final regex = RegExp(rule.regex!, caseSensitive: false, unicode: true);
+          if (regex.hasMatch(cleanContent)) {
+            isMatch = true;
+          }
+        } catch (_) {}
+      }
+
+      // Keyword match
+      if (!isMatch) {
+        for (var keyword in rule.keywords) {
+          if (lowerContent.contains(keyword.toLowerCase())) {
+            isMatch = true;
+            break;
+          }
+        }
+      }
+
+      if (isMatch) {
+        matchedRules.add(rule);
+        if (primaryCategory == ScamCategory.unknown && rule.category != ScamCategory.unknown) {
+          primaryCategory = rule.category;
+        }
+      }
+    }
+
+    // Special type-specific fallback rules
+    if (type == ScanType.qr && lowerContent.startsWith('upi://pay')) {
+      if (matchedRules.isEmpty) {
+        primaryCategory = ScamCategory.qrScam;
+      }
+    } else if (type == ScanType.url && (lowerContent.startsWith('http://') || lowerContent.startsWith('https://'))) {
+      if (matchedRules.isEmpty) {
+        primaryCategory = ScamCategory.unknown;
+      }
+    }
+
+    final riskLevel = RiskCalculator.calculateRiskLevel(matchedRules);
+
+    String reason = 'Based on available analysis, no known threat patterns were detected.';
+    String action = 'Always verify the sender before opening links or making payments.';
+
+    if (matchedRules.isNotEmpty) {
+      final ruleNames = matchedRules.map((r) => r.name).join(', ');
+      reason = 'Matched security rules: $ruleNames.';
+      matchedRules.sort((a, b) => b.weight.compareTo(a.weight));
+      action = matchedRules.first.recommendedAction;
+    }
+
+    final confidence = matchedRules.isEmpty ? 0.95 : (matchedRules.length * 0.25).clamp(0.40, 0.95);
+
+    return DetectionResult(
+      riskLevel: riskLevel,
+      confidence: confidence,
+      category: matchedRules.isEmpty ? ScamCategory.unknown : primaryCategory,
+      matchedRules: matchedRules.map((r) => r.id).toList(),
+      reason: reason,
+      recommendedAction: action,
+      timestamp: DateTime.now(),
+    );
+  }
 }
+
 

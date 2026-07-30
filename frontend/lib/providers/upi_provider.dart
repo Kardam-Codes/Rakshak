@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/upi_transaction_entity.dart';
 import '../repositories/upi_repository.dart';
-import 'notification_provider.dart';
+import 'database_provider.dart';
 
 final upiRepositoryProvider = Provider<UPIRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
