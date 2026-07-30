@@ -22,9 +22,3 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
-
-subprojects {
-    afterEvaluate {
-        apply(from = "$rootDir/fix-namespace.gradle")
-    }
-}
