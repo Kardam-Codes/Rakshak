@@ -12,18 +12,22 @@ class CallWarningOverlay extends StatefulWidget {
 }
 
 class _CallWarningOverlayState extends State<CallWarningOverlay> {
-  String _number = "Unknown";
-  String _reason = "Suspicious Call Detected";
+  String _reason = "Suspicious Event Detected";
+  bool _isOtp = false;
 
   @override
   void initState() {
     super.initState();
     FlutterOverlayWindow.overlayListener.listen((event) {
-      // Assuming event is passed as a string or map. 
-      // For now, doing a basic overlay update
       if (event != null && event is String) {
         setState(() {
-          _reason = event;
+          if (event.startsWith('OTP:')) {
+            _isOtp = true;
+            _reason = event.replaceFirst('OTP:', '').trim();
+          } else {
+            _isOtp = false;
+            _reason = event;
+          }
         });
       }
     });
@@ -31,6 +35,86 @@ class _CallWarningOverlayState extends State<CallWarningOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isOtp) {
+      return _buildOtpOverlay(context);
+    }
+    return _buildCallOverlay(context);
+  }
+
+  Widget _buildOtpOverlay(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        margin: const EdgeInsets.all(AppSpacing.s16),
+        padding: const EdgeInsets.all(AppSpacing.s16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+          border: Border.all(color: AppColors.warning, width: 2),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.security_rounded, color: AppColors.warning, size: 32),
+                const SizedBox(width: AppSpacing.s12),
+                Expanded(
+                  child: Text(
+                    "OTP Detected",
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.s16),
+            Text(
+              "⚠ Never share this OTP with anyone.\nBanks, UPI apps and government agencies will never ask for your OTP through a phone call, SMS, WhatsApp or social media.",
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                 OutlinedButton(
+                   onPressed: () {
+                     FlutterOverlayWindow.closeOverlay();
+                   },
+                   child: const Text("Dismiss"),
+                 ),
+                 ElevatedButton(
+                   onPressed: () {
+                     // Since overlay isolate cannot easily push routes, we just close and expect user to open app
+                     FlutterOverlayWindow.closeOverlay();
+                   },
+                   style: ElevatedButton.styleFrom(
+                     backgroundColor: AppColors.primary,
+                     foregroundColor: Colors.white,
+                   ),
+                   child: const Text("View Details"),
+                 )
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCallOverlay(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: Container(

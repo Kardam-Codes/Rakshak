@@ -66,7 +66,9 @@ class AlertEngine {
 
   void _triggerPopupIfCritical(NotificationEntity entity) {
     if (onCriticalAlert != null) {
-      if (entity.riskLevel == RiskLevel.high || entity.riskLevel == RiskLevel.critical) {
+      if (entity.riskLevel == RiskLevel.high || 
+          entity.riskLevel == RiskLevel.critical ||
+          entity.category == ScamCategory.otpScam) {
         onCriticalAlert!(
            title: entity.title,
            category: entity.category.name,

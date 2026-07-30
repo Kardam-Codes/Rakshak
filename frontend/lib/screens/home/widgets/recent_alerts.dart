@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/spacing.dart';
 import '../../../core/constants/icons.dart';
 import '../../../providers/notification_provider.dart';
+import '../../../engine/models/scam_category.dart';
 
 class RecentAlerts extends ConsumerWidget {
   const RecentAlerts({super.key});
@@ -55,7 +56,11 @@ class RecentAlerts extends ConsumerWidget {
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  context.push('/notification_detail', extra: notif);
+                  if (notif.category == ScamCategory.otpScam) {
+                    context.push('/otp_detail', extra: notif);
+                  } else {
+                    context.push('/alerts/notification_detail', extra: notif);
+                  }
                 },
               )).toList(),
             );

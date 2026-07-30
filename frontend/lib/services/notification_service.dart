@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:notification_listener_service/notification_event.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import '../repositories/notification_repository.dart';
 import '../models/notification_entity.dart';
 import '../repositories/call_repository.dart';
@@ -31,7 +32,23 @@ class NotificationService {
     _upiProtectionService = UPIProtectionService(_upiRepository, _alertEngine);
   }
 
-  void _showCriticalPopupNative({required String title, required String category, required RiskLevel riskLevel}) {
+  void _showCriticalPopupNative({required String title, required String category, required RiskLevel riskLevel}) async {
+    // 1. Always attempt to trigger the universal background overlay for OTPs specifically
+    if (category == ScamCategory.otpScam.name) {
+      if (await FlutterOverlayWindow.isPermissionGranted()) {
+        await FlutterOverlayWindow.showOverlay(
+          enableDrag: true,
+          overlayTitle: "Rakshak OTP Security",
+          overlayContent: "OTP: $title",
+          flag: OverlayFlag.defaultFlag,
+          visibility: NotificationVisibility.visibilityPublic,
+          positionGravity: PositionGravity.top,
+        );
+        // Share data payload for the generic overlay to decode
+        FlutterOverlayWindow.shareData('OTP: $title');
+      }
+    }
+
     final context = rootNavigatorKey.currentContext;
     if (context != null) {
       showDialog(

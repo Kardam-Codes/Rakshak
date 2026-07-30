@@ -5,6 +5,7 @@ import '../../providers/notification_provider.dart';
 import '../../providers/call_provider.dart';
 import '../../providers/upi_provider.dart';
 import '../../models/notification_entity.dart';
+import '../../engine/models/scam_category.dart';
 import '../../models/call_entity.dart';
 import '../../models/upi_transaction_entity.dart';
 import '../../widgets/empty_state.dart';
@@ -23,7 +24,7 @@ class AlertsScreen extends ConsumerStatefulWidget {
   ConsumerState<AlertsScreen> createState() => AlertsScreenState();
 }
 
-enum AlertType { all, message, call, upi }
+enum AlertType { all, message, call, upi, otp }
 
 class AlertsScreenState extends ConsumerState<AlertsScreen> {
   AlertType _selectedType = AlertType.all;
@@ -34,6 +35,11 @@ class AlertsScreenState extends ConsumerState<AlertsScreen> {
     late String subtitle;
 
     if (item is NotificationEntity) {
+       if (item.category == ScamCategory.otpScam) {
+         context.push('/otp_detail', extra: item);
+         return;
+       }
+
        final template = ExplanationTemplateBuilder.build(item.category);
        entity = ExplanationEntity(
           sourceFeature: 'notification',
@@ -113,6 +119,7 @@ class AlertsScreenState extends ConsumerState<AlertsScreen> {
                 ButtonSegment(value: AlertType.message, label: Text('Messages')),
                 ButtonSegment(value: AlertType.call, label: Text('Calls')),
                 ButtonSegment(value: AlertType.upi, label: Text('UPI')),
+                ButtonSegment(value: AlertType.otp, label: Text('OTPs')),
               ],
               selected: {_selectedType},
               onSelectionChanged: (Set<AlertType> newSelection) {
@@ -131,7 +138,14 @@ class AlertsScreenState extends ConsumerState<AlertsScreen> {
                         data: (upis) {
                            // Aggregate
                            List<dynamic> combined = [];
-                           if (_selectedType == AlertType.all || _selectedType == AlertType.message) combined.addAll(notifications);
+                           if (_selectedType == AlertType.all) {
+                              combined.addAll(notifications);
+                           } else if (_selectedType == AlertType.message) {
+                              combined.addAll(notifications.where((n) => n.category != ScamCategory.otpScam));
+                           } else if (_selectedType == AlertType.otp) {
+                              combined.addAll(notifications.where((n) => n.category == ScamCategory.otpScam));
+                           }
+
                            if (_selectedType == AlertType.all || _selectedType == AlertType.call) combined.addAll(calls);
                            if (_selectedType == AlertType.all || _selectedType == AlertType.upi) combined.addAll(upis);
 

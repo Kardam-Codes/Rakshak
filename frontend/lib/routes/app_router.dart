@@ -8,10 +8,10 @@ import '../screens/alerts/alerts_screen.dart';
 import '../screens/scanner/scan_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/settings/settings_screen.dart';
-import '../screens/alerts/notification_detail_screen.dart';
 import '../models/notification_entity.dart';
 import '../screens/history/call_detail_screen.dart';
 import '../screens/alerts/transaction_detail_screen.dart';
+import '../screens/alerts/otp_detail_screen.dart';
 import '../models/call_entity.dart';
 import '../models/upi_transaction_entity.dart';
 import '../screens/scanner/qr_camera_screen.dart';
@@ -132,6 +132,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           final message = state.extra as String?;
           return EmergencyScreen(suspiciousMessage: message);
         },
+      ),
+      GoRoute(
+        path: '/otp_detail',
+        builder: (context, state) {
+          final notification = state.extra as NotificationEntity;
+          return OtpDetailScreen(notification: notification);
+        }
       ),
     ],
   );
