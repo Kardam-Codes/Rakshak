@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/call_entity.dart';
 import '../../core/constants/spacing.dart';
 import '../../core/constants/colors.dart';
 import '../../widgets/risk_badge.dart';
+import '../../engine/models/risk_level.dart';
 
 class CallDetailScreen extends StatelessWidget {
   final CallEntity call;
@@ -55,7 +57,25 @@ class CallDetailScreen extends StatelessWidget {
                 _buildAction(context, Icons.report, "Report", AppColors.warning),
                 _buildAction(context, Icons.phone, "Call Back", AppColors.success),
               ],
-            )
+            ),
+            if (call.riskLevel.index >= RiskLevel.medium.index) ... [
+               const SizedBox(height: AppSpacing.s32),
+               SizedBox(
+                 width: double.infinity,
+                 child: FilledButton.icon(
+                    onPressed: () {
+                       context.push('/emergency', extra: 'Suspicious Call Detected: ${call.phoneNumber} (${call.category.name})');
+                    },
+                    icon: const Icon(Icons.security),
+                    label: const Text('Emergency Recovery Actions'),
+                    style: FilledButton.styleFrom(
+                       backgroundColor: Theme.of(context).colorScheme.error,
+                       foregroundColor: Theme.of(context).colorScheme.onError,
+                       padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                 ),
+               ),
+            ]
           ],
         ),
       ),

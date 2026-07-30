@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../models/upi_transaction_entity.dart';
 import '../../core/constants/colors.dart';
@@ -137,6 +138,25 @@ class TransactionDetailScreen extends StatelessWidget {
               ),
             ],
             
+            if (transaction.riskLevel.index >= RiskLevel.medium.index) ... [
+               const SizedBox(height: AppSpacing.s32),
+               SizedBox(
+                 width: double.infinity,
+                 child: FilledButton.icon(
+                    onPressed: () {
+                       context.push('/emergency', extra: 'Suspicious Transaction Detected: ${transaction.merchantName} (Amount: ${formatter.format(transaction.amount)})');
+                    },
+                    icon: const Icon(Icons.security),
+                    label: const Text('Emergency Recovery Actions'),
+                    style: FilledButton.styleFrom(
+                       backgroundColor: Theme.of(context).colorScheme.error,
+                       foregroundColor: Theme.of(context).colorScheme.onError,
+                       padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                 ),
+               ),
+            ],
+
             const SizedBox(height: AppSpacing.s24),
             PrimaryButton(
               onPressed: () => Navigator.pop(context),

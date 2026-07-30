@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/notification_entity.dart';
 import '../../core/constants/spacing.dart';
@@ -163,6 +164,22 @@ class NotificationDetailScreen extends ConsumerWidget {
                   ),
                 )
              ],
+          ],
+          
+          if (!isSafe) ... [
+             const SizedBox(height: AppSpacing.s24),
+             FilledButton.icon(
+                onPressed: () {
+                   context.push('/emergency', extra: notification.body);
+                },
+                icon: const Icon(Icons.security),
+                label: const Text('Emergency Recovery Actions'),
+                style: FilledButton.styleFrom(
+                   backgroundColor: Theme.of(context).colorScheme.error,
+                   foregroundColor: Theme.of(context).colorScheme.onError,
+                   padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+             ),
           ]
         ],
       ),

@@ -16,12 +16,11 @@ import '../models/call_entity.dart';
 import '../models/upi_transaction_entity.dart';
 import '../screens/scanner/qr_camera_screen.dart';
 import '../screens/scanner/scan_result_screen.dart';
-import '../models/scan_entity.dart';
 import '../screens/family/trusted_family_screen.dart';
+import '../models/scan_entity.dart';
+import '../screens/emergency/emergency_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
-
-import '../screens/emergency/emergency_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -126,6 +125,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
         ],
+      ),
+      GoRoute(
+        path: '/emergency',
+        builder: (context, state) {
+          final message = state.extra as String?;
+          return EmergencyScreen(suspiciousMessage: message);
+        },
       ),
     ],
   );
