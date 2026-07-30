@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:telephony/telephony.dart';
 import 'package:http/http.dart' as http;
 import '../core/database/app_database.dart';
 import '../models/trusted_contact.dart';
@@ -50,7 +53,7 @@ class TrustedFamilyService {
               headers: {'Content-Type': 'application/json'},
               body: jsonEncode({
                 'user_name': userName,
-                'recipient_email': contact.email,
+                'recipient_phone': contact.phoneNumber,
                 'recipient_name': contact.name,
                 'risk_level': riskLevel.name.toUpperCase(),
                 'category': category,
@@ -70,11 +73,11 @@ class TrustedFamilyService {
 
         // Save delivery record to Hive history
         final historyEntity = FamilyAlertHistoryEntity(
-          recipientEmail: contact.email,
+          recipientEmail: contact.phoneNumber,
           recipientName: contact.name,
           riskLevel: riskLevel,
           category: category,
-          messageSummary: 'High-risk alert notification sent to ${contact.name} (${contact.relationship})',
+          messageSummary: 'High-risk WhatsApp alert sent to ${contact.name} (${contact.relationship})',
           timestamp: DateTime.now(),
           deliveryStatus: isSuccess ? 'sent' : 'failed',
           viewed: false,
@@ -82,9 +85,19 @@ class TrustedFamilyService {
 
         await _db.insertFamilyAlertHistory(historyEntity);
       } catch (e) {
-        // Fallback history record if network offline
+        // Fallback history record if network offline (Execute Telephony SMS)
+        if (e is SocketException || e.toString().contains('TimeoutException')) {
+          _analyticsService.logEvent('offline_sms_fallback_triggered');
+          try {
+             String smsBody = 'URGENT: $userName is targeted by a ${riskLevel.name} $category.\nReason: $reason.\nTake immediate action.';
+             await Telephony.backgroundInstance.sendSms(to: contact.phoneNumber, message: smsBody);
+          } catch(smsErr) {
+             debugPrint('SMS Fallback failed: $smsErr');
+          }
+        }
+
         final historyEntity = FamilyAlertHistoryEntity(
-          recipientEmail: contact.email,
+          recipientEmail: contact.phoneNumber,
           recipientName: contact.name,
           riskLevel: riskLevel,
           category: category,

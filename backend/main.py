@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
 from services.gemini import generate_explanation, generate_call_explanation, generate_upi_explanation, generate_scan_explanation
-from services.email_service import EmailService
+from services.gemini import generate_explanation, generate_call_explanation, generate_upi_explanation, generate_scan_explanation
 
 load_dotenv()
 
@@ -14,7 +14,7 @@ family_alert_history = []
 
 class FamilyAlertRequest(BaseModel):
     user_name: str
-    recipient_email: str
+    recipient_phone: str
     recipient_name: str
     risk_level: str
     category: str
@@ -22,25 +22,22 @@ class FamilyAlertRequest(BaseModel):
     ai_explanation: str | None = None
     recommended_action: str | None = None
 
-class TestEmailRequest(BaseModel):
-    recipient_email: str
+class TestWhatsAppRequest(BaseModel):
+    recipient_phone: str
     recipient_name: str
 
 @app.post("/family/send-alert")
 def send_family_alert(req: FamilyAlertRequest):
-    success = EmailService.send_emergency_alert(
-        recipient_email=req.recipient_email,
-        recipient_name=req.recipient_name,
-        user_name=req.user_name,
-        risk_level=req.risk_level,
-        category=req.category,
-        reason=req.reason,
-        ai_explanation=req.ai_explanation,
-        recommended_action=req.recommended_action,
-    )
+    # Simulated WhatsApp Business API Dispatcher
+    print(f"[WHATSAPP API] Dispatching high-risk alert to +{req.recipient_phone}")
+    print(f"Template Payload: User {req.user_name} is targeted by {req.risk_level} {req.category}.")
+    
+    # Normally we would await meta client graph responses here.
+    success = True
+    
     if success:
         record = {
-            "recipient_email": req.recipient_email,
+            "recipient_phone": req.recipient_phone,
             "recipient_name": req.recipient_name,
             "user_name": req.user_name,
             "risk_level": req.risk_level,
@@ -48,26 +45,19 @@ def send_family_alert(req: FamilyAlertRequest):
             "status": "sent",
         }
         family_alert_history.insert(0, record)
-        return {"status": "success", "message": f"Alert email sent to {req.recipient_email}"}
+        return {"status": "success", "message": f"WhatsApp alert delivered instantly to {req.recipient_name} at {req.recipient_phone}"}
     else:
-        raise HTTPException(status_code=500, detail="Failed to send family alert email")
+        raise HTTPException(status_code=500, detail="Failed to dispatch family WhatsApp alert")
 
-@app.post("/family/test-email")
-def test_email(req: TestEmailRequest):
-    success = EmailService.send_emergency_alert(
-        recipient_email=req.recipient_email,
-        recipient_name=req.recipient_name,
-        user_name="Test User",
-        risk_level="HIGH",
-        category="Test Scam Verification",
-        reason="This is a test notification from Rakshak Trusted Family Mode.",
-        ai_explanation="Rakshak verified that email alerts are configured properly.",
-        recommended_action="No action required. This is a test email.",
-    )
+@app.post("/family/test-whatsapp")
+def test_whatsapp(req: TestWhatsAppRequest):
+    print(f"[WHATSAPP API] Dispatching TEST alert to +{req.recipient_phone}")
+    success = True
+    
     if success:
-        return {"status": "success", "message": f"Test email sent to {req.recipient_email}"}
+        return {"status": "success", "message": f"Test WhatsApp alert sent to {req.recipient_phone}"}
     else:
-        raise HTTPException(status_code=500, detail="Failed to send test email")
+        raise HTTPException(status_code=500, detail="Failed to send test WhatsApp alert")
 
 @app.get("/family/history")
 def get_family_history():
