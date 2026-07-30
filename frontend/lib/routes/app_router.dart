@@ -21,11 +21,20 @@ import '../screens/family/trusted_family_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
+import '../screens/emergency/emergency_screen.dart';
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/home',
     routes: [
+      GoRoute(
+        path: '/emergency',
+        builder: (context, state) {
+          final msg = state.extra as String?;
+          return EmergencyScreen(suspiciousMessage: msg);
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppScaffold(navigationShell: navigationShell);
