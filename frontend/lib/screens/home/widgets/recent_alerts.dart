@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/spacing.dart';
 import '../../../core/constants/icons.dart';
 import '../../../providers/notification_provider.dart';
+import '../../../engine/models/risk_level.dart';
 import '../../../engine/models/scam_category.dart';
 
 class RecentAlerts extends ConsumerWidget {
@@ -32,13 +33,14 @@ class RecentAlerts extends ConsumerWidget {
         const SizedBox(height: AppSpacing.s8),
         notificationsAsync.when(
           data: (notifications) {
-            if (notifications.isEmpty) {
+            final unsafeNotifications = notifications.where((n) => n.riskLevel != RiskLevel.safe).toList();
+            if (unsafeNotifications.isEmpty) {
               return const Padding(
                 padding: EdgeInsets.all(AppSpacing.s8),
                 child: Text('No recent alerts.'),
               );
             }
-            final recent = notifications.take(5).toList();
+            final recent = unsafeNotifications.take(5).toList();
             return Column(
               children: recent.map((notif) => ListTile(
                 contentPadding: EdgeInsets.zero,

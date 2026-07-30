@@ -30,13 +30,17 @@ class NotificationCard extends StatelessWidget {
                 children: [
                   const Icon(Icons.notifications_active, size: 16),
                   const SizedBox(width: AppSpacing.s8),
-                  Text(
-                    notification.appName,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      notification.appName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: AppSpacing.s8),
                   Text(
                     '${notification.timestamp.hour}:${notification.timestamp.minute.toString().padLeft(2, '0')}',
                     style: Theme.of(context).textTheme.bodySmall,

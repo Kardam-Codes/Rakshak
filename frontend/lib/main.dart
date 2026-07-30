@@ -8,6 +8,7 @@ import 'routes/app_router.dart';
 import 'core/database/app_database.dart';
 import 'providers/notification_provider.dart';
 import 'providers/database_provider.dart';
+import 'providers/call_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +32,7 @@ class RakshakApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     ref.watch(notificationPermissionProvider);
+    ref.watch(callDetectionServiceProvider);
 
     return MaterialApp.router(
       title: AppStrings.appName,
