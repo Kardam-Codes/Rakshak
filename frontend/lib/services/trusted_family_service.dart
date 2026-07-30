@@ -17,7 +17,7 @@ class TrustedFamilyService {
     required TrustedFamilyRepository repository,
     required AppDatabase db,
     required TrustedFamilyAnalyticsService analyticsService,
-    this.backendBaseUrl = 'http://192.168.1.6:8000',
+    this.backendBaseUrl = 'http://192.168.29.225:8000',
   })  : _repository = repository,
         _db = db,
         _analyticsService = analyticsService;
@@ -51,12 +51,14 @@ class TrustedFamilyService {
               body: jsonEncode({
                 'user_name': userName,
                 'recipient_email': contact.email,
+                'recipient_phone': contact.phoneNumber,
                 'recipient_name': contact.name,
                 'risk_level': riskLevel.name.toUpperCase(),
                 'category': category,
                 'reason': reason,
                 'ai_explanation': aiExplanation,
                 'recommended_action': recommendedAction,
+                'notification_method': contact.preferredNotificationMethod.name,
               }),
             )
             .timeout(const Duration(seconds: 5));

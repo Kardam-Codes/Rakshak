@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from services.gemini import generate_explanation, generate_call_explanation, generate_upi_explanation, generate_scan_explanation
 from services.email_service import EmailService
+from services.sms_service import SmsService
 
 load_dotenv()
 
@@ -21,6 +22,7 @@ class FamilyAlertRequest(BaseModel):
     reason: str
     ai_explanation: str | None = None
     recommended_action: str | None = None
+    notification_method: str = "email"
 
 class TestEmailRequest(BaseModel):
     recipient_email: str
@@ -28,16 +30,28 @@ class TestEmailRequest(BaseModel):
 
 @app.post("/family/send-alert")
 def send_family_alert(req: FamilyAlertRequest):
-    success = EmailService.send_emergency_alert(
-        recipient_email=req.recipient_email,
-        recipient_name=req.recipient_name,
-        user_name=req.user_name,
-        risk_level=req.risk_level,
-        category=req.category,
-        reason=req.reason,
-        ai_explanation=req.ai_explanation,
-        recommended_action=req.recommended_action,
-    )
+    success = False
+    if req.notification_method.lower() == "sms" and req.recipient_phone:
+        success = SmsService.send_emergency_sms(
+            recipient_phone=req.recipient_phone,
+            recipient_name=req.recipient_name,
+            user_name=req.user_name,
+            risk_level=req.risk_level,
+            category=req.category,
+            reason=req.reason,
+        )
+    else:
+        success = EmailService.send_emergency_alert(
+            recipient_email=req.recipient_email,
+            recipient_name=req.recipient_name,
+            user_name=req.user_name,
+            risk_level=req.risk_level,
+            category=req.category,
+            reason=req.reason,
+            ai_explanation=req.ai_explanation,
+            recommended_action=req.recommended_action,
+        )
+        
     if success:
         record = {
             "recipient_email": req.recipient_email,
@@ -46,11 +60,12 @@ def send_family_alert(req: FamilyAlertRequest):
             "risk_level": req.risk_level,
             "category": req.category,
             "status": "sent",
+            "method": req.notification_method,
         }
         family_alert_history.insert(0, record)
-        return {"status": "success", "message": f"Alert email sent to {req.recipient_email}"}
+        return {"status": "success", "message": f"Alert {req.notification_method} sent to {req.recipient_name}"}
     else:
-        raise HTTPException(status_code=500, detail="Failed to send family alert email")
+        raise HTTPException(status_code=500, detail="Failed to send family alert")
 
 @app.post("/family/test-email")
 def test_email(req: TestEmailRequest):

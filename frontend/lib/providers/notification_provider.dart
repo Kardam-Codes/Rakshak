@@ -8,7 +8,7 @@ import 'database_provider.dart';
 import 'call_provider.dart';
 import 'upi_provider.dart';
 import 'trusted_family_provider.dart';
-
+import 'explainability_provider.dart';
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return NotificationRepository(db);
@@ -19,7 +19,8 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   final callRepo = ref.watch(callRepositoryProvider);
   final upiRepo = ref.watch(upiRepositoryProvider);
   final trustedFamilyService = ref.watch(trustedFamilyServiceProvider);
-  return NotificationService(repo, callRepo, upiRepo, trustedFamilyService);
+  final explainEngine = ref.watch(explainabilityEngineProvider);
+  return NotificationService(repo, callRepo, upiRepo, trustedFamilyService, explainEngine);
 });
 
 final notificationsProvider = StreamProvider<List<NotificationEntity>>((ref) {

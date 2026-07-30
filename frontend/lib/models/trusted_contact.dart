@@ -11,7 +11,7 @@ extension NotificationMethodExtension on NotificationMethod {
       case NotificationMethod.email:
         return 'Email';
       case NotificationMethod.sms:
-        return 'SMS (Future)';
+        return 'SMS';
       case NotificationMethod.push:
         return 'Push (Future)';
       case NotificationMethod.whatsapp:

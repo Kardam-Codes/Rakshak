@@ -5,7 +5,7 @@ import '../../engine/models/risk_level.dart';
 import '../../engine/models/scam_category.dart';
 
 class RakshakClient {
-  static const String _baseUrl = 'http://192.168.1.6:8000'; // Default emulator route for localhost
+  static const String _baseUrl = 'http://192.168.29.225:8000'; // Default emulator route for localhost
 
   static Future<AiExplanation?> fetchExplanation({
     required String notificationText,

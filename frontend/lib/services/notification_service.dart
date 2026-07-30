@@ -7,6 +7,7 @@ import '../repositories/call_repository.dart';
 import '../config/supported_apps.dart';
 import '../engine/rule_engine.dart';
 import '../engine/alert_engine.dart';
+import '../engine/explainability/explainability_engine.dart';
 import '../services/upi_protection_service.dart';
 import '../repositories/upi_repository.dart';
 
@@ -25,9 +26,10 @@ class NotificationService {
   late final AlertEngine _alertEngine;
   late final UPIProtectionService _upiProtectionService;
   final TrustedFamilyService _trustedFamilyService;
+  final ExplainabilityEngine _explainEngine;
 
-  NotificationService(this._repository, this._callRepository, this._upiRepository, this._trustedFamilyService) {
-    _alertEngine = AlertEngine(_repository, _callRepository, _upiRepository, onCriticalAlert: _showCriticalPopupNative);
+  NotificationService(this._repository, this._callRepository, this._upiRepository, this._trustedFamilyService, this._explainEngine) {
+    _alertEngine = AlertEngine(_repository, _callRepository, _upiRepository, _explainEngine, onCriticalAlert: _showCriticalPopupNative);
     _upiProtectionService = UPIProtectionService(_upiRepository, _alertEngine);
   }
 

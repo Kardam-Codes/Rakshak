@@ -6,6 +6,7 @@ import '../../models/upi_transaction_entity.dart';
 import '../../models/scan_entity.dart';
 import '../../models/trusted_contact.dart';
 import '../../models/family_alert_history.dart';
+import '../../models/explanation_entity.dart';
 import '../../engine/models/risk_level.dart';
 import '../../engine/models/scam_category.dart';
 import '../../engine/models/transaction_type.dart';
@@ -232,6 +233,51 @@ class ScanResultEntityAdapter extends TypeAdapter<ScanResultEntity> {
   }
 }
 
+class ExplanationEntityAdapter extends TypeAdapter<ExplanationEntity> {
+  @override
+  final int typeId = 6;
+
+  @override
+  ExplanationEntity read(BinaryReader reader) {
+    final fields = reader.readMap();
+    return ExplanationEntity(
+      id: fields['id'],
+      sourceFeature: fields['sourceFeature'] ?? '',
+      category: fields['category'] ?? '',
+      riskLevel: RiskLevel.values.firstWhere(
+        (e) => e.name == fields['riskLevel'],
+        orElse: () => RiskLevel.safe,
+      ),
+      confidence: fields['confidence'] ?? 0.0,
+      offlineExplanation: fields['offlineExplanation'] ?? '',
+      aiExplanation: fields['aiExplanation'],
+      recommendedAction: fields['recommendedAction'],
+      preventionTips: (fields['preventionTips'] as List?)?.cast<String>() ?? [],
+      summary: fields['summary'] ?? '',
+      createdAt: fields['createdAt'] ?? DateTime.now(),
+      contentHash: fields['contentHash'] ?? '',
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ExplanationEntity obj) {
+    writer.writeMap({
+      'id': obj.id,
+      'sourceFeature': obj.sourceFeature,
+      'category': obj.category,
+      'riskLevel': obj.riskLevel.name,
+      'confidence': obj.confidence,
+      'offlineExplanation': obj.offlineExplanation,
+      'aiExplanation': obj.aiExplanation,
+      'recommendedAction': obj.recommendedAction,
+      'preventionTips': obj.preventionTips,
+      'summary': obj.summary,
+      'createdAt': obj.createdAt,
+      'contentHash': obj.contentHash,
+    });
+  }
+}
+
 class AppDatabase {
   static const String _boxName = 'notifications_box';
   static const String _callsBoxName = 'calls_box';
@@ -241,6 +287,7 @@ class AppDatabase {
   static const String _familyHistoryBoxName = 'family_alert_history_box';
   static const String _settingsBoxName = 'trusted_family_settings_box';
   static const String _analyticsBoxName = 'trusted_family_analytics_box';
+  static const String _explanationsBoxName = 'explanations_box';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -250,12 +297,14 @@ class AppDatabase {
     Hive.registerAdapter(ScanResultEntityAdapter());
     Hive.registerAdapter(TrustedContactAdapter());
     Hive.registerAdapter(FamilyAlertHistoryAdapter());
+    Hive.registerAdapter(ExplanationEntityAdapter());
     await Hive.openBox<NotificationEntity>(_boxName);
     await Hive.openBox<CallEntity>(_callsBoxName);
     await Hive.openBox<UPITransactionEntity>(_upiBoxName);
     await Hive.openBox<ScanResultEntity>(_scansBoxName);
     await Hive.openBox<TrustedContact>(_trustedContactsBoxName);
     await Hive.openBox<FamilyAlertHistoryEntity>(_familyHistoryBoxName);
+    await Hive.openBox<ExplanationEntity>(_explanationsBoxName);
     await Hive.openBox(_settingsBoxName);
     await Hive.openBox(_analyticsBoxName);
   }
@@ -497,6 +546,29 @@ class AppDatabase {
 
   Future<void> clearFamilyAlertHistory() async {
     await _familyHistoryBox.clear();
+  }
+
+  // --- Explanation Entity Methods ---
+  Box<ExplanationEntity> get _explanationsBox => Hive.box<ExplanationEntity>(_explanationsBoxName);
+
+  Future<int> insertExplanation(ExplanationEntity entity) async {
+    final id = await _explanationsBox.add(entity);
+    await _explanationsBox.put(id, entity.copyWith(id: id));
+    return id;
+  }
+
+  Future<void> updateExplanation(ExplanationEntity entity) async {
+    if (entity.id != null && _explanationsBox.containsKey(entity.id)) {
+      await _explanationsBox.put(entity.id!, entity);
+    }
+  }
+
+  ExplanationEntity? getExplanationByHash(String hash) {
+    try {
+      return _explanationsBox.values.firstWhere((e) => e.contentHash == hash);
+    } catch (_) {
+      return null;
+    }
   }
 }
 
