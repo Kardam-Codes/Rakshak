@@ -77,10 +77,7 @@ class CallDetectionService {
           overlayContent: "Suspicious Call: $number",
           flag: OverlayFlag.defaultFlag,
           visibility: NotificationVisibility.visibilityPublic,
-<<<<<<< HEAD
-=======
           positionGravity: PositionGravity.none,
->>>>>>> 48f0399 (fix: improve notification alerts and navigation)
         );
      }
   }

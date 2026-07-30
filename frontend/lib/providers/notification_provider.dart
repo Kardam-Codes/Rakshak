@@ -21,17 +21,13 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   final callRepo = ref.watch(callRepositoryProvider);
   final upiRepo = ref.watch(upiRepositoryProvider);
   final trustedFamilyService = ref.watch(trustedFamilyServiceProvider);
-<<<<<<< HEAD
   final db = ref.watch(appDatabaseProvider);
   final explainRepo = ExplainabilityRepository(db);
   final explainEngine = ExplainabilityEngine(explainRepo);
   
-  return NotificationService(repo, callRepo, upiRepo, trustedFamilyService, explainEngine);
-=======
-  final service = NotificationService(repo, callRepo, upiRepo, trustedFamilyService);
+  final service = NotificationService(repo, callRepo, upiRepo, trustedFamilyService, explainEngine);
   ref.onDispose(service.dispose);
   return service;
->>>>>>> 48f0399 (fix: improve notification alerts and navigation)
 });
 
 final notificationsProvider = StreamProvider<List<NotificationEntity>>((ref) {

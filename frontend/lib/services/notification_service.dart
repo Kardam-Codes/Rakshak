@@ -29,18 +29,30 @@ class NotificationService {
   final NotificationRepository _repository;
   final CallRepository _callRepository;
   final UPIRepository _upiRepository;
-<<<<<<< HEAD
-  final TrustedFamilyService _trustedFamilyService;
-  final ExplainabilityEngine _explainEngine;
   late final UPIProtectionService _upiProtectionService;
   late final AlertEngine _alertEngine;
+  StreamSubscription<ServiceNotificationEvent>? _subscription;
+  bool _isListening = false;
+  final Set<String> _recentlyHandledHashes = <String>{};
 
-  NotificationService(this._repository, this._callRepository, this._upiRepository, this._trustedFamilyService, this._explainEngine) {
-    _alertEngine = AlertEngine(_repository, _callRepository, _upiRepository, _explainEngine, onCriticalAlert: _showCriticalPopupNative);
+  NotificationService(
+    this._repository,
+    this._callRepository,
+    this._upiRepository,
+    TrustedFamilyService trustedFamilyService,
+    ExplainabilityEngine explainEngine,
+  ) {
+    _alertEngine = AlertEngine(
+      _repository,
+      _callRepository,
+      _upiRepository,
+      explainEngine,
+      onCriticalAlert: _showCriticalToast,
+    );
     _upiProtectionService = UPIProtectionService(_upiRepository, _alertEngine);
   }
 
-  void _showCriticalPopupNative({required String title, required String category, required RiskLevel riskLevel}) async {
+  void _showCriticalToast({required String title, required String category, required RiskLevel riskLevel}) async {
     // 1. Always attempt to trigger the universal background overlay for OTPs specifically
     if (category == ScamCategory.otpScam.name) {
       if (await FlutterOverlayWindow.isPermissionGranted()) {
@@ -56,33 +68,6 @@ class NotificationService {
       }
     }
 
-=======
-  late final AlertEngine _alertEngine;
-  late final UPIProtectionService _upiProtectionService;
-  StreamSubscription<ServiceNotificationEvent>? _subscription;
-  bool _isListening = false;
-  final Set<String> _recentlyHandledHashes = <String>{};
-
-  NotificationService(
-    this._repository,
-    this._callRepository,
-    this._upiRepository,
-    TrustedFamilyService trustedFamilyService,
-  ) {
-    final explainabilityRepository = ExplainabilityRepository(_repository.database);
-    final explainabilityEngine = ExplainabilityEngine(explainabilityRepository);
-    _alertEngine = AlertEngine(
-      _repository,
-      _callRepository,
-      _upiRepository,
-      explainabilityEngine,
-      onCriticalAlert: _showCriticalToast,
-    );
-    _upiProtectionService = UPIProtectionService(_upiRepository, _alertEngine);
-  }
-
-  void _showCriticalToast({required String title, required String category, required RiskLevel riskLevel}) {
->>>>>>> 48f0399 (fix: improve notification alerts and navigation)
     final context = rootNavigatorKey.currentContext;
     if (context == null || !context.mounted) return;
 
