@@ -26,7 +26,6 @@ class AppScaffold extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(AppIcons.home), label: AppStrings.home),
           BottomNavigationBarItem(icon: Icon(AppIcons.alerts), label: AppStrings.alerts),
           BottomNavigationBarItem(icon: Icon(AppIcons.scan), label: AppStrings.scan),
-          BottomNavigationBarItem(icon: Icon(AppIcons.history), label: AppStrings.history),
           BottomNavigationBarItem(icon: Icon(AppIcons.settings), label: AppStrings.settings),
         ],
       ),

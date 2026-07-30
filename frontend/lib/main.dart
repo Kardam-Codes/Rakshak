@@ -7,6 +7,7 @@ import 'core/constants/strings.dart';
 import 'routes/app_router.dart';
 import 'core/database/app_database.dart';
 import 'providers/notification_provider.dart';
+import 'providers/database_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

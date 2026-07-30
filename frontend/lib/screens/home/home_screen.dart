@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'widgets/risk_summary_card.dart';
 import 'widgets/quick_actions.dart';
 import 'widgets/recent_alerts.dart';
+import 'widgets/recent_scan_widget.dart';
+import 'widgets/trusted_family_card.dart';
 import 'widgets/safety_tip.dart';
 import '../../core/constants/spacing.dart';
 
@@ -26,6 +28,10 @@ class HomeScreen extends StatelessWidget {
           RiskSummaryCard(),
           SizedBox(height: AppSpacing.s24),
           QuickActions(),
+          SizedBox(height: AppSpacing.s16),
+          TrustedFamilyCard(),
+          SizedBox(height: AppSpacing.s16),
+          RecentScanWidget(),
           SizedBox(height: AppSpacing.s24),
           RecentAlerts(),
           SizedBox(height: AppSpacing.s24),

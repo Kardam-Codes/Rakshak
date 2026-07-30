@@ -3,10 +3,7 @@ import '../models/call_entity.dart';
 import '../repositories/call_repository.dart';
 import '../core/database/app_database.dart';
 
-final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  // AppDatabase itself should be singleton or initialized in main
-  return AppDatabase(); 
-});
+import 'database_provider.dart';
 
 final callRepositoryProvider = Provider<CallRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);

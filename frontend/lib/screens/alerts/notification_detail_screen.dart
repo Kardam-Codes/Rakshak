@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/notification_entity.dart';
 import '../../core/constants/spacing.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/database_provider.dart';
 import '../../widgets/risk_badge.dart';
 import '../../engine/models/scam_category.dart';
 import '../../engine/models/risk_level.dart';

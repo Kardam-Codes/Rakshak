@@ -9,6 +9,9 @@ enum ScamCategory {
   fakeLoan,
   giftScam,
   jobScam,
+  phishingWebsite,
+  suspiciousDomain,
+  maliciousUrl,
   unknown
 }
 
@@ -35,6 +38,12 @@ extension ScamCategoryExtension on ScamCategory {
         return 'Gift Scam';
       case ScamCategory.jobScam:
         return 'Job Scam';
+      case ScamCategory.phishingWebsite:
+        return 'Phishing Website';
+      case ScamCategory.suspiciousDomain:
+        return 'Suspicious Domain';
+      case ScamCategory.maliciousUrl:
+        return 'Malicious URL';
       case ScamCategory.unknown:
         return 'Unknown';
     }

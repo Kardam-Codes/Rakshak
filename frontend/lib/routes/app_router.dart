@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,9 +14,16 @@ import '../screens/history/call_detail_screen.dart';
 import '../screens/alerts/transaction_detail_screen.dart';
 import '../models/call_entity.dart';
 import '../models/upi_transaction_entity.dart';
+import '../screens/scanner/qr_camera_screen.dart';
+import '../screens/scanner/scan_result_screen.dart';
+import '../models/scan_entity.dart';
+import '../screens/family/trusted_family_screen.dart';
+
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/home',
     routes: [
       StatefulShellRoute.indexedStack(
@@ -67,20 +75,16 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/scan',
                 builder: (context, state) => const ScanScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/history',
-                builder: (context, state) => const HistoryScreen(), // Switch to CallHistoryScreen if needed
                 routes: [
                   GoRoute(
-                    path: 'call_detail',
+                    path: 'qr',
+                    builder: (context, state) => const QrCameraScreen(),
+                  ),
+                  GoRoute(
+                    path: 'result',
                     builder: (context, state) {
-                      final call = state.extra as CallEntity;
-                      return CallDetailScreen(call: call);
+                      final result = state.extra as ScanResultEntity;
+                      return ScanResultScreen(result: result);
                     },
                   ),
                 ],
@@ -94,6 +98,23 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const SettingsScreen(),
               ),
             ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/family',
+        builder: (context, state) => const TrustedFamilyScreen(),
+      ),
+      GoRoute(
+        path: '/history',
+        builder: (context, state) => const HistoryScreen(),
+        routes: [
+          GoRoute(
+            path: 'call_detail',
+            builder: (context, state) {
+              final call = state.extra as CallEntity;
+              return CallDetailScreen(call: call);
+            },
           ),
         ],
       ),

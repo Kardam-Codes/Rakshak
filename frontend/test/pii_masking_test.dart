@@ -12,7 +12,7 @@ void main() {
     test('Should mask multi-part debit card numbers', () {
       final text = "Transaction of ₹50 on card ending with 4111 1234 5678 9010 declined.";
       final masked = PIIMasking.maskData(text);
-      expect(masked, "Transaction of ₹50 on card ending with **************** declined.");
+      expect(masked, "Transaction of ₹50 on card ending with **** **** **** **** declined.");
     });
 
     test('Should mask UPI PIN explicitly', () {
