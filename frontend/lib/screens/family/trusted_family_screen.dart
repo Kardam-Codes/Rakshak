@@ -224,7 +224,7 @@ class TrustedFamilyScreen extends ConsumerWidget {
                           ],
                         ],
                       ),
-                      subtitle: Text('${contact.relationship} • ${contact.email} • ${contact.preferredNotificationMethod.displayName}'),
+                      subtitle: Text('${contact.relationship} • ${contact.phoneNumber}'),
                       trailing: PopupMenuButton<String>(
                         onSelected: (val) async {
                           if (val == 'primary' && contact.id != null) {
