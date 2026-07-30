@@ -34,6 +34,8 @@ class NotificationService {
   StreamSubscription<ServiceNotificationEvent>? _subscription;
   bool _isListening = false;
   final Set<String> _recentlyHandledHashes = <String>{};
+  late final TrustedFamilyService _trustedFamilyService;
+  final Map<String, Timer> _pendingFamilyAlerts = {};
 
   NotificationService(
     this._repository,
@@ -42,6 +44,7 @@ class NotificationService {
     TrustedFamilyService trustedFamilyService,
     ExplainabilityEngine explainEngine,
   ) {
+    _trustedFamilyService = trustedFamilyService;
     _alertEngine = AlertEngine(
       _repository,
       _callRepository,
@@ -50,6 +53,15 @@ class NotificationService {
       onCriticalAlert: _showCriticalToast,
     );
     _upiProtectionService = UPIProtectionService(_upiRepository, _alertEngine);
+
+    fo.FlutterOverlayWindow.overlayListener.listen((event) {
+      if (event is String && event.startsWith('CANCEL_ALERT:')) {
+        final alertId = event.replaceFirst('CANCEL_ALERT:', '');
+        _pendingFamilyAlerts[alertId]?.cancel();
+        _pendingFamilyAlerts.remove(alertId);
+        developer.log('User cancelled trusted family alert $alertId from overlay.');
+      }
+    });
   }
 
   void _showCriticalToast({required String title, required String category, required RiskLevel riskLevel}) async {
@@ -69,10 +81,33 @@ class NotificationService {
     }
 
     if (riskLevel.index >= RiskLevel.high.index) {
+      final alertId = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      if (await fo.FlutterOverlayWindow.isPermissionGranted()) {
+        await fo.FlutterOverlayWindow.showOverlay(
+          enableDrag: true,
+          overlayTitle: "Emergency Alert Countdown",
+          overlayContent: "FAMILY_ALERT:$alertId:$title",
+          flag: fo.OverlayFlag.defaultFlag,
+          visibility: fo.NotificationVisibility.visibilityPublic,
+        );
+        fo.FlutterOverlayWindow.shareData('FAMILY_ALERT:$alertId:$title');
+      }
+
       await LocalNotificationService.showHighRiskAlert(
         title: '${riskLevel.name.toUpperCase()} Risk Alert: ${ScamCategory.values.firstWhere((item) => item.name == category, orElse: () => ScamCategory.unknown).displayName}',
         body: title,
       );
+
+      _pendingFamilyAlerts[alertId] = Timer(const Duration(seconds: 10), () async {
+        _pendingFamilyAlerts.remove(alertId);
+        await _trustedFamilyService.sendEmergencyAlert(
+          userName: 'Rakshak User', // TODO: Fetch from actual profile bounds
+          riskLevel: riskLevel,
+          category: category,
+          reason: title,
+        );
+      });
     }
 
     final context = rootNavigatorKey.currentContext;

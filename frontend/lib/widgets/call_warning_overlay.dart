@@ -15,6 +15,10 @@ class CallWarningOverlay extends StatefulWidget {
 class _CallWarningOverlayState extends State<CallWarningOverlay> {
   String _reason = 'Suspicious event detected';
   bool _isOtp = false;
+  bool _isFamilyAlert = false;
+  String? _alertId;
+  int _countdown = 10;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -24,13 +28,68 @@ class _CallWarningOverlayState extends State<CallWarningOverlay> {
 
       setState(() {
         _isOtp = event.startsWith('OTP:');
-        _reason = _isOtp ? event.replaceFirst('OTP:', '').trim() : event;
+        _isFamilyAlert = event.startsWith('FAMILY_ALERT:');
+        
+        if (_isOtp) {
+          _reason = event.replaceFirst('OTP:', '').trim();
+        } else if (_isFamilyAlert) {
+          final parts = event.split(':'); // "FAMILY_ALERT:id:title"
+          if (parts.length >= 3) {
+            _alertId = parts[1];
+            _reason = parts.sublist(2).join(':').trim();
+          }
+          _startCountdown();
+        } else {
+          _reason = event;
+        }
+      });
+    });
+  }
+
+  void _startCountdown() {
+    _timer?.cancel();
+    _countdown = 10;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_countdown > 1) {
+          _countdown--;
+        } else {
+          timer.cancel();
+          FlutterOverlayWindow.closeOverlay(); // Auto close at 0
+        }
       });
     });
   }
 
   @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isFamilyAlert) {
+      return _CompactWarningOverlay(
+        icon: Icons.family_restroom,
+        title: 'Emergency Alert ($countdown \seconds)',
+        message: 'Dispatching high-risk alert to Trusted Family network for:\n$_reason',
+        color: AppColors.primary,
+        showCancelButton: true,
+        onCancel: () {
+          if (_alertId != null) {
+            FlutterOverlayWindow.shareData('CANCEL_ALERT:$_alertId');
+          }
+          _timer?.cancel();
+          FlutterOverlayWindow.closeOverlay();
+        },
+      );
+    }
+
     return _CompactWarningOverlay(
       icon: _isOtp ? Icons.security_rounded : Icons.warning_rounded,
       title: _isOtp ? 'OTP Detected' : 'High Risk Call',
@@ -47,12 +106,16 @@ class _CompactWarningOverlay extends StatelessWidget {
   final String title;
   final String message;
   final Color color;
+  final bool showCancelButton;
+  final VoidCallback? onCancel;
 
   const _CompactWarningOverlay({
     required this.icon,
     required this.title,
     required this.message,
     required this.color,
+    this.showCancelButton = false,
+    this.onCancel,
   });
 
   @override
@@ -105,11 +168,21 @@ class _CompactWarningOverlay extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  tooltip: 'Close',
-                  icon: const Icon(Icons.close),
-                  onPressed: FlutterOverlayWindow.closeOverlay,
-                ),
+                if (showCancelButton)
+                  TextButton(
+                    onPressed: onCancel,
+                    style: TextButton.styleFrom(
+                      foregroundColor: color,
+                      backgroundColor: color.withOpacity(0.1),
+                    ),
+                    child: const Text('CANCEL', style: TextStyle(fontWeight: FontWeight.bold)),
+                  )
+                else
+                  IconButton(
+                    tooltip: 'Close',
+                    icon: const Icon(Icons.close),
+                    onPressed: FlutterOverlayWindow.closeOverlay,
+                  ),
               ],
             ),
           ),
