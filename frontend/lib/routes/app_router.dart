@@ -8,6 +8,10 @@ import '../screens/alerts/alerts_screen.dart';
 import '../screens/scanner/scan_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/settings/account_screen.dart';
+import '../screens/alerts/notification_detail_screen.dart';
+import '../screens/alerts/explanation_detail_screen.dart';
+import '../models/explanation_entity.dart';
 import '../models/notification_entity.dart';
 import '../screens/history/call_detail_screen.dart';
 import '../screens/alerts/transaction_detail_screen.dart';
@@ -53,6 +57,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/alerts',
                 builder: (context, state) => const AlertsScreen(),
                 routes: [
+                  GoRoute(
+                    path: 'explain_detail',
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      return ExplanationDetailScreen(
+                        entity: extra['entity'] as ExplanationEntity,
+                        contextTitle: extra['title'] as String,
+                        contextSubtitle: extra['subtitle'] as String,
+                      );
+                    },
+                  ),
                   GoRoute(
                     path: 'notification_detail',
                     builder: (context, state) {
@@ -104,6 +119,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/settings',
                 builder: (context, state) => const SettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'account',
+                    builder: (context, state) => const AccountScreen(),
+                  ),
+                ],
               ),
             ],
           ),

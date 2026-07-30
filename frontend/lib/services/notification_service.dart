@@ -10,6 +10,8 @@ import '../engine/rule_engine.dart';
 import '../engine/alert_engine.dart';
 import '../services/upi_protection_service.dart';
 import '../repositories/upi_repository.dart';
+import '../engine/explainability/explainability_engine.dart';
+import '../engine/models/scam_category.dart';
 
 import '../repositories/call_repository.dart';
 import 'package:flutter/material.dart';
@@ -23,12 +25,13 @@ class NotificationService {
   final NotificationRepository _repository;
   final CallRepository _callRepository;
   final UPIRepository _upiRepository;
-  late final AlertEngine _alertEngine;
-  late final UPIProtectionService _upiProtectionService;
   final TrustedFamilyService _trustedFamilyService;
+  final ExplainabilityEngine _explainEngine;
+  late final UPIProtectionService _upiProtectionService;
+  late final AlertEngine _alertEngine;
 
-  NotificationService(this._repository, this._callRepository, this._upiRepository, this._trustedFamilyService) {
-    _alertEngine = AlertEngine(_repository, _callRepository, _upiRepository, onCriticalAlert: _showCriticalPopupNative);
+  NotificationService(this._repository, this._callRepository, this._upiRepository, this._trustedFamilyService, this._explainEngine) {
+    _alertEngine = AlertEngine(_repository, _callRepository, _upiRepository, _explainEngine, onCriticalAlert: _showCriticalPopupNative);
     _upiProtectionService = UPIProtectionService(_upiRepository, _alertEngine);
   }
 
@@ -42,7 +45,6 @@ class NotificationService {
           overlayContent: "OTP: $title",
           flag: OverlayFlag.defaultFlag,
           visibility: NotificationVisibility.visibilityPublic,
-          positionGravity: PositionGravity.top,
         );
         // Share data payload for the generic overlay to decode
         FlutterOverlayWindow.shareData('OTP: $title');

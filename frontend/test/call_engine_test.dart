@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rakshak/engine/rule_engine.dart';
-import 'package:rakshak/engine/models/risk_level.dart';
 import 'package:rakshak/engine/models/scam_category.dart';
+import 'package:rakshak/engine/models/risk_level.dart';
 
 void main() {
   group('Call Rule Engine Tests', () {

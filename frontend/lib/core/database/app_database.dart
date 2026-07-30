@@ -9,6 +9,52 @@ import '../../models/family_alert_history.dart';
 import '../../engine/models/risk_level.dart';
 import '../../engine/models/scam_category.dart';
 import '../../engine/models/transaction_type.dart';
+import '../../models/explanation_entity.dart';
+
+class ExplanationEntityAdapter extends TypeAdapter<ExplanationEntity> {
+  @override
+  final int typeId = 6;
+
+  @override
+  ExplanationEntity read(BinaryReader reader) {
+    final fields = reader.readMap();
+    return ExplanationEntity(
+      id: fields['id'],
+      sourceFeature: fields['sourceFeature'] ?? 'notification',
+      category: fields['category'] ?? 'unknown',
+      riskLevel: RiskLevel.values.firstWhere(
+        (e) => e.name == fields['riskLevel'], 
+        orElse: () => RiskLevel.safe
+      ),
+      confidence: fields['confidence'] ?? 0.0,
+      offlineExplanation: fields['offlineExplanation'] ?? '',
+      aiExplanation: fields['aiExplanation'],
+      recommendedAction: fields['recommendedAction'],
+      preventionTips: (fields['preventionTips'] as List?)?.cast<String>() ?? [],
+      summary: fields['summary'] ?? '',
+      createdAt: fields['createdAt'] ?? DateTime.now(),
+      contentHash: fields['contentHash'] ?? '',
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ExplanationEntity obj) {
+    writer.writeMap({
+      'id': obj.id,
+      'sourceFeature': obj.sourceFeature,
+      'category': obj.category,
+      'riskLevel': obj.riskLevel.name,
+      'confidence': obj.confidence,
+      'offlineExplanation': obj.offlineExplanation,
+      'aiExplanation': obj.aiExplanation,
+      'recommendedAction': obj.recommendedAction,
+      'preventionTips': obj.preventionTips,
+      'summary': obj.summary,
+      'createdAt': obj.createdAt,
+      'contentHash': obj.contentHash,
+    });
+  }
+}
 
 class NotificationEntityAdapter extends TypeAdapter<NotificationEntity> {
   @override
@@ -250,12 +296,14 @@ class AppDatabase {
     Hive.registerAdapter(ScanResultEntityAdapter());
     Hive.registerAdapter(TrustedContactAdapter());
     Hive.registerAdapter(FamilyAlertHistoryAdapter());
+    Hive.registerAdapter(ExplanationEntityAdapter());
     await Hive.openBox<NotificationEntity>(_boxName);
     await Hive.openBox<CallEntity>(_callsBoxName);
     await Hive.openBox<UPITransactionEntity>(_upiBoxName);
     await Hive.openBox<ScanResultEntity>(_scansBoxName);
     await Hive.openBox<TrustedContact>(_trustedContactsBoxName);
     await Hive.openBox<FamilyAlertHistoryEntity>(_familyHistoryBoxName);
+    await Hive.openBox<ExplanationEntity>('explanations');
     await Hive.openBox(_settingsBoxName);
     await Hive.openBox(_analyticsBoxName);
   }
@@ -448,6 +496,30 @@ class AppDatabase {
     final updated = contact.copyWith(id: id);
     await _trustedContactsBox.put(id, updated);
     return id;
+  }
+
+  // --- Explanation Entity Methods ---
+  Box<ExplanationEntity> get _explanationsBox => Hive.box<ExplanationEntity>('explanations');
+
+  Future<int> insertExplanation(ExplanationEntity entity) async {
+    final id = await _explanationsBox.add(entity);
+    final updated = entity.copyWith(id: id);
+    await _explanationsBox.put(id, updated);
+    return id;
+  }
+
+  Future<void> updateExplanation(ExplanationEntity entity) async {
+    if (entity.id != null && _explanationsBox.containsKey(entity.id)) {
+      await _explanationsBox.put(entity.id!, entity);
+    }
+  }
+
+  ExplanationEntity? getExplanationByHash(String hash) {
+    try {
+      return _explanationsBox.values.firstWhere((e) => e.contentHash == hash);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> updateTrustedContact(TrustedContact contact) async {

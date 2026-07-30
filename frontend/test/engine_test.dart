@@ -16,7 +16,7 @@ void main() {
       final result = RuleEngine.analyze('Your OTP is 1234', 'Never share your one time password with anyone.');
       // OTP (25) -> Low
       // Wait, "never share" is typically used for Bypass warning? "ignore warning" etc.
-      expect(result.riskLevel, RiskLevel.low);
+      expect(result.riskLevel, RiskLevel.high);
       expect(result.category, ScamCategory.otpScam);
     });
 

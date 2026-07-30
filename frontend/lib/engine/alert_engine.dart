@@ -11,6 +11,7 @@ import '../repositories/call_repository.dart';
 import '../models/upi_transaction_entity.dart';
 import '../repositories/upi_repository.dart';
 import 'explainability/explainability_engine.dart';
+import 'models/scam_category.dart';
 
 class AlertEngine {
   final NotificationRepository _repository;
