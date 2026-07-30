@@ -129,6 +129,59 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     }
   }
 
+  void _showScanOptionsBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Choose what you want Rakshak to check.',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: const Icon(Icons.qr_code_scanner, color: AppColors.primary, size: 28),
+                title: const Text('Scan QR Code', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                subtitle: const Text('Scan QR codes instantly.'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleQrScan();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.image_outlined, color: AppColors.success, size: 28),
+                title: const Text('Upload Image', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                subtitle: const Text('Upload an image or screenshot.'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleImagePick(ScanType.image);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.link, color: AppColors.info, size: 28),
+                title: const Text('Paste Website Link', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                subtitle: const Text('Check website links or UPI links.'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleUrlInput();
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scanState = ref.watch(scanControllerProvider);
@@ -146,109 +199,61 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               children: [
                 // Hero Header Banner
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.s20),
+                  padding: const EdgeInsets.all(AppSpacing.s24),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
+                    color: AppColors.primary.withOpacity(0.05),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.shield_rounded, size: 48, color: Colors.white),
-                      const SizedBox(height: AppSpacing.s8),
+                      const Icon(Icons.shield_rounded, size: 48, color: AppColors.primary),
+                      const SizedBox(height: AppSpacing.s16),
                       const Text(
-                        'Unified Security Scanner',
+                        'Safe Scan',
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
+                          color: AppColors.textPrimaryLight,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.s4),
+                      const SizedBox(height: AppSpacing.s8),
                       const Text(
-                        'Scan QR codes, links, images, or screenshots before interacting to protect your money.',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        'Check QR codes, links and images before interacting.',
+                        style: TextStyle(color: AppColors.textSecondaryLight, fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: AppSpacing.s16),
+                      const SizedBox(height: AppSpacing.s32),
 
                       // Large Primary Trigger Scan Button
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
-                        ),
-                        onPressed: _handleQrScan,
-                        icon: const Icon(Icons.qr_code_scanner, size: 24),
-                        label: const Text(
-                          'Scan QR Code Now',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          onPressed: _showScanOptionsBottomSheet,
+                          child: const Text(
+                            'Scan Now',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: AppSpacing.s24),
-
-                // Four Scan Methods Grid
-                Text(
-                  'Four Scan Methods',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: AppSpacing.s12),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.4,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  children: [
-                    _ScanMethodCard(
-                      icon: Icons.qr_code_2_rounded,
-                      title: 'QR Code',
-                      subtitle: 'Camera scan',
-                      color: AppColors.primary,
-                      onTap: _handleQrScan,
-                    ),
-                    _ScanMethodCard(
-                      icon: Icons.link_rounded,
-                      title: 'Website URL',
-                      subtitle: 'Check link safety',
-                      color: AppColors.info,
-                      onTap: _handleUrlInput,
-                    ),
-                    _ScanMethodCard(
-                      icon: Icons.image_outlined,
-                      title: 'Gallery Image',
-                      subtitle: 'OCR Text Scan',
-                      color: AppColors.success,
-                      onTap: () => _handleImagePick(ScanType.image),
-                    ),
-                    _ScanMethodCard(
-                      icon: Icons.screenshot_outlined,
-                      title: 'Screenshot',
-                      subtitle: 'Scan receipt or SMS',
-                      color: AppColors.warning,
-                      onTap: () => _handleImagePick(ScanType.screenshot),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: AppSpacing.s24),
+                const SizedBox(height: AppSpacing.s32),
 
                 // Recent Scans Section
                 Text(
                   'Recent Scans',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: AppSpacing.s8),
                 historyAsync.when(
@@ -381,54 +386,3 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   }
 }
 
-class _ScanMethodCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ScanMethodCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.s12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: color.withOpacity(0.2),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            Text(
-              subtitle,
-              style: const TextStyle(color: AppColors.textSecondaryLight, fontSize: 11),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
