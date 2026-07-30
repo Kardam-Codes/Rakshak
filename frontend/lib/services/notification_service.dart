@@ -21,6 +21,7 @@ import '../repositories/explainability_repository.dart';
 import '../routes/app_router.dart';
 import 'trusted_family_service.dart';
 import '../engine/models/risk_level.dart';
+import 'local_notification_service.dart';
 
 class NotificationService {
   static const MethodChannel _notificationChannel = MethodChannel('x-slayer/notifications_channel');
@@ -65,6 +66,13 @@ class NotificationService {
         // Share data payload for the generic overlay to decode
         fo.FlutterOverlayWindow.shareData('OTP: $title');
       }
+    }
+
+    if (riskLevel.index >= RiskLevel.high.index) {
+      await LocalNotificationService.showHighRiskAlert(
+        title: '${riskLevel.name.toUpperCase()} Risk Alert: ${ScamCategory.values.firstWhere((item) => item.name == category, orElse: () => ScamCategory.unknown).displayName}',
+        body: title,
+      );
     }
 
     final context = rootNavigatorKey.currentContext;

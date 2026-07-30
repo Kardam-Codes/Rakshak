@@ -16,6 +16,12 @@ class NotificationDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final notificationsAsync = ref.watch(notificationsProvider);
+    final notification = notificationsAsync.valueOrNull?.firstWhere(
+      (n) => n.id == this.notification.id, 
+      orElse: () => this.notification,
+    ) ?? this.notification;
+
     if (!notification.isRead && notification.id != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         try {

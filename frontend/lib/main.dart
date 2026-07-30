@@ -9,9 +9,11 @@ import 'core/database/app_database.dart';
 import 'providers/notification_provider.dart';
 import 'providers/database_provider.dart';
 import 'providers/call_provider.dart';
+import 'services/local_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalNotificationService.initialize();
   final db = AppDatabase();
   await db.init();
   
