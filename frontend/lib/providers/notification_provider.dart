@@ -19,7 +19,9 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   final callRepo = ref.watch(callRepositoryProvider);
   final upiRepo = ref.watch(upiRepositoryProvider);
   final trustedFamilyService = ref.watch(trustedFamilyServiceProvider);
-  return NotificationService(repo, callRepo, upiRepo, trustedFamilyService);
+  final service = NotificationService(repo, callRepo, upiRepo, trustedFamilyService);
+  ref.onDispose(service.dispose);
+  return service;
 });
 
 final notificationsProvider = StreamProvider<List<NotificationEntity>>((ref) {
@@ -59,13 +61,21 @@ class NotificationPermissionNotifier extends StateNotifier<bool> with WidgetsBin
       state = isGranted;
     }
     if (isGranted) {
-      _service.startListening();
-      await _service.syncExistingNotifications();
+      await _service.refreshListener();
     }
   }
 
   Future<void> requestPermission() async {
     await _service.requestPermission();
-    // Re-check happens on lifecycle resume
+    await checkPermission();
+  }
+
+  Future<void> refreshListener() async {
+    await _service.refreshListener();
+    state = await _service.checkPermission();
+  }
+
+  Future<bool> isServiceConnected() {
+    return _service.isServiceConnected();
   }
 }

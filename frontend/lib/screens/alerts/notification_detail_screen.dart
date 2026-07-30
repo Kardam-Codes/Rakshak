@@ -30,6 +30,17 @@ class NotificationDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Alert Details'),
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/alerts');
+            }
+          },
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.s16),
@@ -140,26 +151,27 @@ class NotificationDetailScreen extends ConsumerWidget {
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: AppSpacing.s8),
-                      Text(notification.aiReason!),
+                      if (notification.aiReason != null) Text(notification.aiReason!),
                       const SizedBox(height: AppSpacing.s16),
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.s16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
+                      if (notification.aiRecommendedAction != null)
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.s16),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.shield_outlined, size: 20, color: Theme.of(context).colorScheme.error),
+                              const SizedBox(width: AppSpacing.s8),
+                              Expanded(child: Text(
+                                notification.aiRecommendedAction!,
+                                style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.bold),
+                              ))
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.shield_outlined, size: 20, color: Theme.of(context).colorScheme.error),
-                            const SizedBox(width: AppSpacing.s8),
-                            Expanded(child: Text(
-                              notification.aiRecommendedAction!,
-                              style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.bold),
-                            ))
-                          ],
-                        ),
-                      )
                     ],
                   ),
                 )

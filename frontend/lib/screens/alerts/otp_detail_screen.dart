@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -17,18 +18,11 @@ class OtpDetailScreen extends StatelessWidget {
 
   void _handleCopy(BuildContext context) {
     Clipboard.setData(ClipboardData(text: notification.body));
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('You copied an OTP'),
-        content: const Text(
-            'Only paste it into the official app or website you opened.\n\nNever paste it into links sent by strangers.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Understood'),
-          ),
-        ],
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        behavior: SnackBarBehavior.floating,
+        showCloseIcon: true,
+        content: Text('Copied. Only paste OTPs into the official app or website.'),
       ),
     );
   }
@@ -63,6 +57,17 @@ class OtpDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('OTP Details'),
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/alerts');
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_rounded),

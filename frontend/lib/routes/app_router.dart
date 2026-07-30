@@ -11,6 +11,7 @@ import '../screens/settings/settings_screen.dart';
 import '../models/notification_entity.dart';
 import '../screens/history/call_detail_screen.dart';
 import '../screens/alerts/transaction_detail_screen.dart';
+import '../screens/alerts/notification_detail_screen.dart';
 import '../screens/alerts/otp_detail_screen.dart';
 import '../models/call_entity.dart';
 import '../models/upi_transaction_entity.dart';
@@ -27,13 +28,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: rootNavigatorKey,
     initialLocation: '/home',
     routes: [
-      GoRoute(
-        path: '/emergency',
-        builder: (context, state) {
-          final msg = state.extra as String?;
-          return EmergencyScreen(suspiciousMessage: msg);
-        },
-      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppScaffold(navigationShell: navigationShell);
@@ -131,6 +125,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final message = state.extra as String?;
           return EmergencyScreen(suspiciousMessage: message);
+        },
+      ),
+      GoRoute(
+        path: '/notification_detail',
+        builder: (context, state) {
+          final notification = state.extra as NotificationEntity;
+          return NotificationDetailScreen(notification: notification);
         },
       ),
       GoRoute(
