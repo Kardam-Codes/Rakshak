@@ -14,10 +14,19 @@ import '../screens/alerts/transaction_detail_screen.dart';
 import '../models/call_entity.dart';
 import '../models/upi_transaction_entity.dart';
 
+import '../screens/emergency/emergency_screen.dart';
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/home',
     routes: [
+      GoRoute(
+        path: '/emergency',
+        builder: (context, state) {
+          final msg = state.extra as String?;
+          return EmergencyScreen(suspiciousMessage: msg);
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppScaffold(navigationShell: navigationShell);
