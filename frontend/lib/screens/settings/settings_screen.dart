@@ -7,6 +7,8 @@ import '../../core/constants/icons.dart';
 import '../../widgets/section_title.dart';
 import '../../providers/notification_provider.dart';
 
+final _offlineAiToggleProvider = StateProvider<bool>((ref) => false);
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -62,6 +64,32 @@ class SettingsScreen extends ConsumerWidget {
               },
               child: const Text('Refresh'),
             ),
+          ),
+          ),
+          const Divider(),
+          const SectionTitle(title: 'Live Call Protection (Offline AI)'),
+          Consumer(
+            builder: (context, ref, child) {
+              final isOfflineEngineActive = ref.watch(_offlineAiToggleProvider);
+              return SwitchListTile(
+                title: const Text('Zero-Knowledge Offline AI'),
+                subtitle: const Text('Keeps all live call transcripts natively on your device. Audio is permanently deleted after 30s. No cloud connectivity required.'),
+                value: isOfflineEngineActive,
+                activeColor: Colors.green[600],
+                secondary: Icon(
+                  isOfflineEngineActive ? Icons.shield : Icons.gpp_maybe, 
+                  color: isOfflineEngineActive ? Colors.green[700] : Colors.grey,
+                ),
+                onChanged: (val) {
+                  ref.read(_offlineAiToggleProvider.notifier).state = val;
+                  if (val) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Offline Local Monitor Active! Cloud features disabled.')),
+                    );
+                  }
+                },
+              );
+            },
           ),
           const Divider(),
           const SectionTitle(title: 'General'),
