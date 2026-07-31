@@ -1,382 +1,351 @@
 # 🛡️ Rakshak
+## AI-Powered Digital Guardian for Financial Safety
 
-### Your AI Companion for Safe Digital Banking
-
-> **Protecting first-time digital banking users from financial scams through explainable AI, real-time detection, multilingual guidance, and guided recovery.**
+> **Protecting India's first-time digital users from scams before they become victims.**
 
 ---
 
-## 🚀 Overview
+## 🌟 The Story
 
-Rakshak is an AI-powered Android application designed to help users detect, understand, and avoid digital financial scams before money is lost.
+India is leading the world in digital payments.
 
-Unlike traditional security applications, Rakshak focuses specifically on **financial fraud prevention** by combining lightweight on-device detection with explainable AI.
+Millions of people now use UPI, online banking, and digital wallets every day. Unfortunately, cybercriminals are evolving just as quickly.
 
-Rakshak protects users **before**, **during**, and **after** scam attempts by providing:
+A single fake KYC message.
+A fraudulent QR code.
+A convincing phone call.
+One shared OTP.
 
-- 🔔 Real-time scam detection
-- 🧠 Explainable AI analysis
-- 💳 Smart UPI protection
-- 📞 Scam call guidance
-- 📷 QR & URL safety scanning
-- 👨‍👩‍👧 Trusted Family Mode
-- 🚨 Emergency Recovery Assistant
-- 🌐 Multilingual support
+That's often all it takes to lose a lifetime of savings.
+
+The people most affected aren't security experts—they're first-time smartphone users, senior citizens, and rural communities who simply don't recognize sophisticated digital scams.
+
+**Rakshak** was built to change that.
+
+Instead of warning users after an attack has happened, Rakshak actively protects them **before they make a dangerous decision.**
+
+---
+
+# 🎯 What is Rakshak?
+
+Rakshak is an intelligent cybersecurity assistant that quietly runs in the background of an Android device, continuously monitoring digital interactions and identifying financial fraud in real time.
+
+Unlike conventional antivirus applications that focus on malware, Rakshak focuses on **human-targeted attacks**—the scams that exploit trust rather than software vulnerabilities.
+
+Whether it's a suspicious SMS, a fake banking website, a malicious QR code, or a scam phone call, Rakshak analyzes the situation and immediately guides the user with clear, understandable warnings.
+
+---
+
+# 🚨 The Problem
+
+Digital fraud has become one of India's fastest-growing cyber threats.
+
+Some of the most common attacks include:
+
+- Fake KYC Updates
+- OTP Theft
+- Fraudulent UPI Collect Requests
+- Fake Customer Support Numbers
+- QR Payment Scams
+- Investment & Crypto Frauds
+- APK Installation Scams
+- Lottery & Reward Scams
+- Phishing Links
+- Social Engineering Calls
+
+These scams don't infect devices.
+
+They manipulate people.
+
+That's why traditional security software often fails to stop them.
+
+---
+
+# 💡 Our Solution
+
+Rakshak acts as a digital guardian that protects users throughout their entire digital journey.
+
+Instead of reacting after fraud occurs, it continuously watches for suspicious activity across multiple attack surfaces.
+
+Whenever a potential threat is detected, Rakshak immediately explains
+
+- why the activity looks suspicious,
+- what could happen if the user proceeds,
+- and what the safest action is.
+
+Everything happens within seconds, allowing users to stop fraud before any money is lost.
 
 ---
 
 # ✨ Key Features
 
-## 🧠 AI Scam Guardian
+### 📩 Smart SMS Protection
 
-Detects suspicious financial notifications from supported apps and explains why they are risky.
-
----
-
-## 📞 Scam Call Guardian
-
-Warns users during suspicious calls and provides post-call recovery guidance.
+Detects phishing messages, fake banking notifications, OTP theft attempts, reward scams, loan fraud, and malicious links before users interact with them.
 
 ---
 
-## 💳 Smart UPI Protection
+### 📷 QR Code Scanner
 
-Helps users understand payment requests, QR codes, and refund scams before approving transactions.
-
----
-
-## 📷 Safe Scan
-
-Analyze
-
-- QR Codes
-- URLs
-- Screenshots
-- Images
-
-through one unified scanner.
+Analyzes QR codes before payment to identify suspicious merchants, hidden URLs, and fraudulent payment requests.
 
 ---
 
-## 🚨 Emergency Recovery
+### 💳 UPI Protection
 
-Provides guided recovery by helping users:
-
-- Block suspicious numbers
-- Contact their bank
-- Report cybercrime
-- Notify trusted contacts
-- Save evidence
+Recognizes common payment scams such as fake collect requests, suspicious transactions, and deceptive payment flows.
 
 ---
 
-## 👨‍👩‍👧 Trusted Family Mode
+### 🔗 URL Safety Checker
 
-Allows trusted family members to receive alerts during high-risk scam incidents.
-
----
-
-# 🎯 Mission
-
-To make digital banking safer, simpler, and more trustworthy for everyone—especially first-time digital banking users.
+Scans links in messages and notifications to identify phishing websites, fake banking portals, and malicious domains.
 
 ---
 
-# 🏗️ System Architecture
+### 📱 APK Protection
+
+Warns users before installing potentially dangerous or impersonated applications.
+
+---
+
+### ☎ Call Guardian
+
+Monitors suspicious phone calls and identifies common social engineering techniques used by fraudsters.
+
+---
+
+### 👨‍👩‍👧 Trusted Family Network
+
+If Rakshak detects a high-risk situation, trusted family members can be notified so they can intervene before financial loss occurs.
+
+---
+
+### 🌍 Multilingual Support
+
+Designed with accessibility in mind, enabling users to receive security guidance in regional languages.
+
+---
+
+### 📶 Offline First
+
+Protection continues even in areas with poor or no internet connectivity.
+
+---
+
+# 🧠 How Rakshak Works
 
 ```
-                Flutter App
-                      │
-        ┌─────────────┼─────────────┐
-        │             │             │
-        ▼             ▼             ▼
- Notification    Scanner      Call Guardian
-     Engine       Engine          Engine
-        │             │             │
-        └─────────────┼─────────────┘
-                      ▼
-              AI Risk Engine
-              Rule Engine
-                      │
-                      ▼
-         Explainability Engine
-                      │
-                      ▼
-              Alert Manager
-                      │
-                      ▼
-                    User
+SMS
+Calls
+QR Codes
+URLs
+UPI Transactions
+
+          │
+
+          ▼
+
+ Fast Rule-Based Detection
+
+          │
+
+ Suspicious?
+
+     ┌────┴────┐
+
+    No         Yes
+
+    │           │
+
+ Safe      AI Threat Analysis
+
+                │
+
+      Explainable AI Engine
+
+                │
+
+     User Warning + Guidance
+
+                │
+
+ Trusted Family Alert (Optional)
 ```
-
-For detailed engineering documentation, see:
-
-- `docs/SYSTEM_DESIGN.md`
-- `docs/ARCHITECTURE.md`
 
 ---
 
-# 🛠️ Technology Stack
+# ⚙️ Technical Highlights
 
-## Frontend
+Rakshak combines traditional cybersecurity techniques with modern artificial intelligence to create a fast and reliable fraud detection system.
+
+### Hybrid Detection Engine
+
+Instead of running heavy AI continuously, Rakshak first uses an optimized rule engine to filter safe interactions.
+
+Only suspicious content is forwarded to the AI engine, significantly reducing latency, battery consumption, and computational cost.
+
+---
+
+### Offline AI Inference
+
+The application performs threat analysis locally on the device without depending on constant internet connectivity.
+
+This enables:
+
+- Faster responses
+- Better privacy
+- Reliable protection in rural areas
+- Lower infrastructure costs
+
+---
+
+### Explainable AI
+
+Rather than simply displaying
+
+> "Scam Detected"
+
+Rakshak explains
+
+- why it believes something is dangerous,
+- what evidence it found,
+- and what the user should do next.
+
+This transforms every scam detection into a learning opportunity.
+
+---
+
+### Privacy by Design
+
+Protecting user privacy is one of Rakshak's core principles.
+
+Sensitive information such as
+
+- Phone Numbers
+- Aadhaar Numbers
+- PAN Numbers
+- OTPs
+- Banking Details
+
+is automatically masked before any AI processing.
+
+Users maintain complete control over their personal information.
+
+---
+
+# 🏗️ Architecture
+
+```
+Android System Services
+        │
+        ▼
+Notification Listener
+Phone Services
+QR Scanner
+URL Scanner
+UPI Monitor
+        │
+        ▼
+Rule Engine
+        │
+        ▼
+AI Analysis Engine
+        │
+        ▼
+Explainable Threat Detection
+        │
+        ▼
+Alerts • Recommendations • Family Notification
+```
+
+---
+
+# 🛠️ Tech Stack
+
+### Mobile Development
 
 - Flutter
+- Dart
+- Riverpod
 
-## Backend
+### Local Storage
+
+- Hive Database
+
+### Artificial Intelligence
+
+- Offline AI Inference
+- Explainable AI
+- Rule-Based Detection
+- NLP
+
+### Backend
 
 - FastAPI
 
-## Database
+### Security
 
-- SQLite
-
-## AI
-
-- Google Gemini API
-- Rule-Based Detection Engine
-
-## Platform
-
-- Android
+- Regex-based Threat Detection
+- PII Masking
+- Notification Listener
+- Android Background Services
 
 ---
 
-# 📁 Repository Structure
+# 🚀 Why Rakshak is Different
 
-```
-Rakshak/
+Most security apps detect malware.
 
-├── assets/
-├── backend/
-├── docs/
-├── frontend/
-├── scripts/
-├── shared/
+Rakshak detects manipulation.
 
-├── README.md
-├── LICENSE
-└── .env.example
-```
+Instead of asking
 
----
+> "Is this app malicious?"
 
-# 📚 Documentation
+Rakshak asks
 
-## Product
+> "Is someone trying to trick this person?"
 
-- PRD.md
-- FEATURE_LIST.md
-- USER_FLOW.md
-- ROADMAP.md
+That shift in perspective makes Rakshak uniquely suited for protecting first-time smartphone users and digitally vulnerable communities.
 
 ---
 
-## Design
+# 🌍 Real-World Impact
 
-- DESIGN.md
+Rakshak has the potential to
 
----
+- Reduce digital payment fraud
+- Protect senior citizens
+- Increase confidence in UPI
+- Improve digital literacy
+- Support financial inclusion
+- Enable safer adoption of Digital India initiatives
 
-## Engineering
-
-- SYSTEM_DESIGN.md
-- ARCHITECTURE.md
-- DATABASE_SCHEMA.md
-- API_SPEC.md
-
----
-
-## Artificial Intelligence
-
-- AI_RULES.md
-- SCAM_PLAYBOOK.md
+By preventing scams before money is transferred, Rakshak empowers users to participate confidently in India's digital economy.
 
 ---
 
-## Development
+# 🔮 Future Scope
 
-- CODING_STANDARDS.md
-- TESTING_STRATEGY.md
-- CONTRIBUTING.md
-
----
-
-## Coming Soon
-
-- THREAT_MODEL.md
-- PROMPT_LIBRARY.md
-- DECISION_LOG.md
-- DEPLOYMENT.md
+- Support additional Indian languages
+- Personalized scam detection
+- AI-powered voice scam analysis
+- Bank integration
+- Government digital safety initiatives
+- Community-driven scam intelligence
+- Cross-platform protection
 
 ---
 
-# 🚀 Getting Started
+# 👥 Team
 
-## Clone Repository
-
-```bash
-git clone https://github.com/<your-username>/Rakshak.git
-
-cd Rakshak
-```
+Built with the vision of making digital finance safer, smarter, and more accessible for every Indian.
 
 ---
 
-## Frontend
+## ❤️ Our Mission
 
-```bash
-cd frontend
+> **Every notification deserves a second opinion.**
 
-flutter pub get
-
-flutter run
-```
-
----
-
-## Backend
-
-```bash
-cd backend
-
-python -m venv .venv
-```
-
-Windows
-
-```cmd
-.venv\Scripts\activate
-```
-
-Linux / macOS
-
-```bash
-source .venv/bin/activate
-```
-
-Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-Run server
-
-```bash
-uvicorn app.main:app --reload
-```
-
----
-
-# 🔒 Privacy First
-
-Rakshak is designed around privacy.
-
-The application:
-
-- Performs lightweight analysis locally whenever possible.
-- Sends only the minimum required data for advanced AI analysis.
-- Never stores OTPs.
-- Never stores passwords.
-- Never stores UPI PINs.
-- Never stores banking credentials.
-
----
-
-# 🌍 Supported Languages
-
-Current
-
-- 🇬🇧 English
-- 🇮🇳 Gujarati
-
-Planned
-
-- Hindi
-- Marathi
-- Tamil
-- Telugu
-
----
-
-# 🧪 Testing
-
-Rakshak follows a layered testing strategy including:
-
-- Unit Testing
-- Widget Testing
-- Integration Testing
-- AI Evaluation
-- Performance Testing
-- Security Testing
-- Accessibility Testing
-
-See:
-
-```
-docs/TESTING_STRATEGY.md
-```
-
----
-
-# 🤝 Contributing
-
-We welcome contributions.
-
-Please read
-
-```
-docs/CONTRIBUTING.md
-```
-
-before opening an issue or Pull Request.
-
----
-
-# 📈 Roadmap
-
-The planned evolution of Rakshak is documented in
-
-```
-docs/ROADMAP.md
-```
-
-Upcoming areas include:
-
-- Government scam advisories
-- AI Voice Assistant
-- Merchant reputation
-- Community scam reports
-- Regional language expansion
-
----
-
-# 📄 License
-
-This project is licensed under the terms of the project's LICENSE file.
-
----
-
-# 🙏 Acknowledgements
-
-Rakshak is inspired by the mission of making digital financial services safer and more accessible for everyone.
-
-Special thanks to the open-source community and the tools that make this project possible.
-
----
-
-# 📬 Contact
-
-For questions, suggestions, or collaboration, please open an issue or start a discussion in this repository.
-
----
-
-## ⭐ Support the Project
-
-If you find Rakshak useful, consider:
-
-- ⭐ Starring the repository
-- 🐞 Reporting bugs
-- 💡 Suggesting features
-- 🤝 Contributing improvements
-
-Together, we can make digital banking safer for everyone.
+Rakshak exists to ensure that one careless tap never becomes a lifetime regret.
