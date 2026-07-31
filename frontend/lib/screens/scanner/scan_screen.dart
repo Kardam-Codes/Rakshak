@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/constants/colors.dart';
 import '../../core/constants/spacing.dart';
@@ -20,6 +21,30 @@ class ScanScreen extends ConsumerStatefulWidget {
 
 class _ScanScreenState extends ConsumerState<ScanScreen> {
   final ImagePicker _picker = ImagePicker();
+  bool _isOnline = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkConnectivity();
+  }
+
+  Future<void> _checkConnectivity() async {
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (mounted) {
+        setState(() {
+          _isOnline = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isOnline = false;
+        });
+      }
+    }
+  }
 
   Future<void> _handleQrScan() async {
     final String? result = await context.push<String>('/scan/qr');
@@ -189,15 +214,54 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Safe Scan'),
+        title: const Text('Safe Scan', semanticsLabel: 'Safe Scan Dashboard'),
         centerTitle: false,
       ),
       body: scanState.isScanning
           ? _buildLoadingState(scanState.statusMessage ?? 'Analyzing...')
-          : ListView(
-              padding: const EdgeInsets.all(AppSpacing.s16),
-              children: [
-                // Hero Header Banner
+          : RefreshIndicator(
+              onRefresh: _checkConnectivity,
+              child: ListView(
+                padding: const EdgeInsets.all(AppSpacing.s16),
+                children: [
+                  // Offline / Online Status Indicator
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Container(
+                      key: ValueKey(_isOnline),
+                      margin: const EdgeInsets.only(bottom: AppSpacing.s16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _isOnline ? AppColors.success.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _isOnline ? AppColors.success.withOpacity(0.3) : Colors.orange.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _isOnline ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
+                            color: _isOnline ? AppColors.success : Colors.orange,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _isOnline 
+                                ? 'Online Verification Enabled' 
+                                : 'Protected using Rakshak Offline Security Engine.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: _isOnline ? AppColors.success : Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Hero Header Banner
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.s24),
                   decoration: BoxDecoration(
@@ -297,13 +361,33 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                                         : AppColors.danger,
                               ),
                             ),
-                            title: Text(
-                              scan.content,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    scan.content,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  DateFormat('MMM d, h:mm a').format(scan.timestamp),
+                                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondaryLight),
+                                ),
+                              ],
                             ),
-                            subtitle: Text('${scan.scanType.displayName} • ${scan.category.displayName}'),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                '${scan.scanType.displayName} • ${scan.evidence.isNotEmpty ? scan.evidence.first.reason : scan.offlineReason}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ),
                             trailing: Text(
                               scan.riskLevel.name.toUpperCase(),
                               style: TextStyle(

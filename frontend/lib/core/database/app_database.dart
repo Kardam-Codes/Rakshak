@@ -4,6 +4,7 @@ import '../../models/notification_entity.dart';
 import '../../models/call_entity.dart';
 import '../../models/upi_transaction_entity.dart';
 import '../../models/scan_entity.dart';
+import '../../engine/evidence/evidence_models.dart';
 import '../../models/trusted_contact.dart';
 import '../../models/family_alert_history.dart';
 import '../../models/explanation_entity.dart';
@@ -206,6 +207,8 @@ class ScanResultEntityAdapter extends TypeAdapter<ScanResultEntity> {
       aiReason: fields['aiReason'],
       aiRecommendedAction: fields['aiRecommendedAction'],
       aiShortSummary: fields['aiShortSummary'],
+      evidence: (fields['evidence'] as List?)?.map((e) => EvidenceItem.fromJson(Map<String, dynamic>.from(e))).toList() ?? [],
+      confidencePercentage: fields['confidencePercentage'] ?? 100,
       timestamp: fields['timestamp'] ?? DateTime.now(),
       processingTimeMs: fields['processingTimeMs'] ?? 0,
     );
@@ -227,6 +230,8 @@ class ScanResultEntityAdapter extends TypeAdapter<ScanResultEntity> {
       'aiReason': obj.aiReason,
       'aiRecommendedAction': obj.aiRecommendedAction,
       'aiShortSummary': obj.aiShortSummary,
+      'evidence': obj.evidence.map((e) => e.toJson()).toList(),
+      'confidencePercentage': obj.confidencePercentage,
       'timestamp': obj.timestamp,
       'processingTimeMs': obj.processingTimeMs,
     });

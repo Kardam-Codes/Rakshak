@@ -1,5 +1,6 @@
 import '../engine/models/risk_level.dart';
 import '../engine/models/scam_category.dart';
+import '../engine/evidence/evidence_models.dart';
 
 enum ScanType {
   qr,
@@ -40,6 +41,8 @@ class ScanResultEntity {
   final String? aiReason;
   final String? aiRecommendedAction;
   final String? aiShortSummary;
+  final List<EvidenceItem> evidence;
+  final int confidencePercentage;
   final DateTime timestamp;
   final int processingTimeMs;
 
@@ -57,6 +60,8 @@ class ScanResultEntity {
     this.aiReason,
     this.aiRecommendedAction,
     this.aiShortSummary,
+    required this.evidence,
+    required this.confidencePercentage,
     required this.timestamp,
     required this.processingTimeMs,
   });
@@ -75,6 +80,8 @@ class ScanResultEntity {
     String? aiReason,
     String? aiRecommendedAction,
     String? aiShortSummary,
+    List<EvidenceItem>? evidence,
+    int? confidencePercentage,
     DateTime? timestamp,
     int? processingTimeMs,
   }) {
@@ -92,6 +99,8 @@ class ScanResultEntity {
       aiReason: aiReason ?? this.aiReason,
       aiRecommendedAction: aiRecommendedAction ?? this.aiRecommendedAction,
       aiShortSummary: aiShortSummary ?? this.aiShortSummary,
+      evidence: evidence ?? this.evidence,
+      confidencePercentage: confidencePercentage ?? this.confidencePercentage,
       timestamp: timestamp ?? this.timestamp,
       processingTimeMs: processingTimeMs ?? this.processingTimeMs,
     );

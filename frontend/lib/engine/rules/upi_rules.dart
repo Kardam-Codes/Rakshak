@@ -6,7 +6,7 @@ final List<ScamRule> upiRules = [
     id: 'UPI_COLLECT_REQUEST',
     name: 'Suspicious Collect Request',
     description: 'Detects unexpected collect requests where the user is asked to pay instead of receive money.',
-    keywords: ['requested', 'requesting', 'pay', 'send money', 'collect', 'approve', 'enter pin to receive'],
+    keywords: ['requested', 'requesting', 'send money', 'collect', 'approve', 'enter pin to receive'],
     weight: 35,
     category: ScamCategory.collectRequest,
     recommendedAction: 'Do NOT enter your PIN. You never need a PIN to receive money. Decline the request if unknown.',

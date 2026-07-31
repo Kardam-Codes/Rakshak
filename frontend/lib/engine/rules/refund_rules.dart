@@ -7,7 +7,7 @@ final List<ScamRule> refundRules = [
     name: 'Refund Scam',
     description: 'Detects fake refund notifications and customer care scams',
     keywords: [
-      'refund',
+      'fake refund',
       'reverse payment',
       'customer care',
       'remote access',

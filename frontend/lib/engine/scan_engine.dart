@@ -2,7 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/scan_entity.dart';
 import 'models/risk_level.dart';
-import 'rule_engine.dart';
+import 'scan_classifier.dart';
+import 'threat/threat_service.dart';
+import 'threat/threat_models.dart';
+import 'evidence/evidence_models.dart';
+import 'evidence/evidence_builder.dart';
+import 'evidence/confidence_engine.dart';
 import '../repositories/scan_repository.dart';
 import '../services/scan_analytics_service.dart';
 
@@ -37,8 +42,29 @@ class ScanEngine {
       return cached;
     }
 
-    // 2. Offline Rule Analysis
-    final detection = RuleEngine.analyzeScan(normalizedContent, scanType);
+    // 2. Validation & Offline Rule Analysis via Classifier
+    final detection = ScanClassifier.classify(normalizedContent, scanType);
+
+    // 2.5 Threat Intelligence Layer & Decision Merger
+    final threatService = ThreatService();
+    MergedDecision mergedDecision;
+    if (scanType == ScanType.url) {
+      mergedDecision = await threatService.analyzeAndMerge(normalizedContent, detection);
+    } else {
+      // For non-URLs (like plain text or local images), we might skip threat intel or just pass null.
+      // Assuming threat service is designed for URLs based on the prompt.
+      mergedDecision = await threatService.analyzeAndMerge(normalizedContent, detection);
+    }
+
+    // 2.7. Normalize Evidence & Calculate Confidence
+    final evidence = EvidenceBuilder.buildEvidence(
+      structuredEvidence: mergedDecision.structuredEvidence,
+      riskLevel: mergedDecision.riskLevel,
+    );
+    final confidenceScore = ConfidenceEngine.calculateConfidence(
+      evidence,
+      mergedDecision.usedThreatIntelligence,
+    );
 
     String? aiSimpleExplanation;
     String? aiReason;
@@ -46,9 +72,9 @@ class ScanEngine {
     String? aiShortSummary;
 
     // 3. Gemini Explainability (Triggered ONLY for Medium, High, Critical)
-    final bool requiresAiExplanation = detection.riskLevel == RiskLevel.medium ||
-        detection.riskLevel == RiskLevel.high ||
-        detection.riskLevel == RiskLevel.critical;
+    final bool requiresAiExplanation = mergedDecision.riskLevel == RiskLevel.medium ||
+        mergedDecision.riskLevel == RiskLevel.high ||
+        mergedDecision.riskLevel == RiskLevel.critical;
 
     if (requiresAiExplanation) {
       try {
@@ -60,9 +86,9 @@ class ScanEngine {
                 'content': normalizedContent,
                 'scan_type': scanType.name,
                 'category': detection.category.name,
-                'risk': detection.riskLevel.name,
+                'risk': mergedDecision.riskLevel.name,
                 'confidence': detection.confidence,
-                'matched_rules': detection.matchedRules,
+                'evidence': mergedDecision.structuredEvidence,
               }),
             )
             .timeout(const Duration(seconds: 4));
@@ -76,17 +102,19 @@ class ScanEngine {
         }
       } catch (_) {
         // Safe offline fallback when backend unreachable
-        aiSimpleExplanation = 'Based on available analysis, this content matches local risk patterns.';
+        aiSimpleExplanation = 'Based on available analysis, this content was evaluated locally.';
         aiReason = detection.reason;
         aiRecommendedAction = detection.recommendedAction;
-        aiShortSummary = 'Risk Detected';
+        aiShortSummary = detection.riskLevel == RiskLevel.safe ? 'Appears Safe' : 'Risk Detected';
       }
     } else {
       // Safe fallback for safe / low risk
-      aiSimpleExplanation = 'Based on available analysis, no immediate high-risk patterns were detected.';
-      aiReason = 'The scanned item passed local rule checks with safe parameters.';
-      aiRecommendedAction = 'Exercise normal caution when proceeding.';
-      aiShortSummary = 'Appears Safe';
+      aiSimpleExplanation = detection.riskLevel == RiskLevel.safe 
+        ? 'Verified content passed all local security checks.' 
+        : 'Based on available analysis, no immediate high-risk patterns were detected.';
+      aiReason = detection.reason;
+      aiRecommendedAction = detection.recommendedAction;
+      aiShortSummary = detection.riskLevel == RiskLevel.safe ? 'Appears Safe' : 'Suspicious';
     }
 
     stopwatch.stop();
@@ -95,7 +123,7 @@ class ScanEngine {
     final entity = ScanResultEntity(
       content: normalizedContent,
       scanType: scanType,
-      riskLevel: detection.riskLevel,
+      riskLevel: mergedDecision.riskLevel,
       confidence: detection.confidence,
       category: detection.category,
       matchedRules: detection.matchedRules,
@@ -105,6 +133,8 @@ class ScanEngine {
       aiReason: aiReason,
       aiRecommendedAction: aiRecommendedAction,
       aiShortSummary: aiShortSummary,
+      evidence: evidence,
+      confidencePercentage: confidenceScore.percentage,
       timestamp: DateTime.now(),
       processingTimeMs: elapsedMs,
     );
@@ -116,7 +146,7 @@ class ScanEngine {
     // Track analytics locally
     _analyticsService.trackScan(
       scanType: scanType.name,
-      riskLevel: detection.riskLevel.name,
+      riskLevel: mergedDecision.riskLevel.name,
       durationMs: elapsedMs,
     );
 
