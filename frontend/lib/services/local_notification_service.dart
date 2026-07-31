@@ -15,7 +15,7 @@ class LocalNotificationService {
     );
     
     await _flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (details) {
         developer.log('User tapped the local notification! Payload: ${details.payload}');
       }

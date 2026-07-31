@@ -5,6 +5,7 @@ import 'models/risk_level.dart';
 import 'rule_engine.dart';
 import '../repositories/scan_repository.dart';
 import '../services/scan_analytics_service.dart';
+import '../services/onnx_service.dart';
 
 class ScanEngine {
   final ScanRepository _scanRepository;
@@ -37,8 +38,11 @@ class ScanEngine {
       return cached;
     }
 
-    // 2. Offline Rule Analysis
-    final detection = RuleEngine.analyzeScan(normalizedContent, scanType);
+    // 2. ML model analysis, with local rule fallback if model is unavailable.
+    final detection = await OnnxService.instance.predict(
+          'Scan type: ${scanType.name}\nContent: $normalizedContent',
+        ) ??
+        RuleEngine.analyzeScan(normalizedContent, scanType);
 
     String? aiSimpleExplanation;
     String? aiReason;

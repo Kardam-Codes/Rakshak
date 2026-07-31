@@ -11,6 +11,7 @@ import '../engine/rule_engine.dart';
 import '../engine/alert_engine.dart';
 import '../services/upi_protection_service.dart';
 import '../repositories/upi_repository.dart';
+import '../services/onnx_service.dart';
 import '../engine/explainability/explainability_engine.dart';
 import '../engine/models/scam_category.dart';
 
@@ -204,7 +205,7 @@ class NotificationService {
     _isListening = false;
   }
 
-  void _handleIncomingNotification(ServiceNotificationEvent event) {
+  Future<void> _handleIncomingNotification(ServiceNotificationEvent event) async {
     final packageName = event.packageName ?? '';
     final title = event.title ?? '';
     final body = event.content ?? '';
@@ -218,7 +219,8 @@ class NotificationService {
     // Notice we dropped the SupportedApps constraint completely temporarily to allow testing
     final appName = SupportedApps.getAppName(packageName, packageName);
     
-    final detection = RuleEngine.analyze(title, body);
+    final combinedText = '$title\n$body';
+    final detection = await OnnxService.instance.predict(combinedText) ?? RuleEngine.analyze(title, body);
 
     final entity = NotificationEntity(
       appName: appName,

@@ -5,7 +5,7 @@ import '../../engine/models/risk_level.dart';
 import '../../engine/models/scam_category.dart';
 
 class RakshakClient {
-  static const String _baseUrl = 'http://192.168.1.6:8000'; // Default emulator route for localhost
+  static const String _baseUrl = 'http://192.168.1.6:8000';
 
   static Future<AiExplanation?> fetchExplanation({
     required String notificationText,
@@ -30,9 +30,8 @@ class RakshakClient {
       if (response.statusCode == 200) {
         return AiExplanation.fromJson(jsonDecode(response.body));
       }
-      return null; // Fallback happens in engine
+      return null;
     } catch (e) {
-      // Offline fallback activated on API connection fail/timeout
       return null;
     }
   }
@@ -95,7 +94,7 @@ class RakshakClient {
       if (response.statusCode == 200) {
         return AiExplanation.fromJson(jsonDecode(response.body));
       }
-       return null;
+      return null;
     } catch (e) {
       return null;
     }

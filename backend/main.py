@@ -26,6 +26,7 @@ class TestEmailRequest(BaseModel):
     recipient_email: str
     recipient_name: str
 
+
 @app.post("/family/send-alert")
 def send_family_alert(req: FamilyAlertRequest):
     success = EmailService.send_emergency_alert(
@@ -83,6 +84,7 @@ class AnalysisRequest(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok", "version": "1.0.0"}
+
 
 @app.post("/explain")
 def explain_notification(req: AnalysisRequest):

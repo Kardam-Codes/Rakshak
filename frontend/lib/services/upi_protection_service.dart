@@ -4,6 +4,7 @@ import '../engine/rule_engine.dart';
 import '../engine/alert_engine.dart';
 import '../engine/models/transaction_type.dart';
 import '../models/notification_entity.dart';
+import '../services/onnx_service.dart';
 
 class UPIProtectionService {
   final UPIRepository _upiRepository;
@@ -41,8 +42,16 @@ class UPIProtectionService {
       return; 
     }
 
-    // 4. Rule Engine Analysis
-    final detection = RuleEngine.analyzeUPI(
+    // 4. ML model analysis, with local rule fallback if backend/model is unavailable.
+    final modelText = [
+      notification.title,
+      notification.body,
+      'Transaction type: ${type.name}',
+      if (amount > 0) 'Amount: $amount',
+      if (upiId.isNotEmpty) 'UPI ID: $upiId',
+      'Merchant: $merchantName',
+    ].join('\n');
+    final detection = await OnnxService.instance.predict(modelText) ?? RuleEngine.analyzeUPI(
       merchantName: merchantName,
       upiId: upiId,
       type: type,
