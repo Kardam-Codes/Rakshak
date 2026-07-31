@@ -33,21 +33,27 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             title: const Text('Notification Access'),
             subtitle: Text(permissionGranted ? 'Granted' : 'Denied'),
-            trailing: permissionGranted 
+            trailing: permissionGranted
                 ? const Icon(Icons.check_circle, color: Colors.green)
                 : OutlinedButton(
                     onPressed: () {
-                      ref.read(notificationPermissionProvider.notifier).requestPermission();
+                      ref
+                          .read(notificationPermissionProvider.notifier)
+                          .requestPermission();
                     },
                     child: const Text('Request'),
                   ),
           ),
           ListTile(
             title: const Text('Notification Listener'),
-            subtitle: const Text('Restart listener and resync active notifications'),
+            subtitle: const Text(
+              'Restart listener and resync active notifications',
+            ),
             trailing: OutlinedButton(
               onPressed: () async {
-                final notifier = ref.read(notificationPermissionProvider.notifier);
+                final notifier = ref.read(
+                  notificationPermissionProvider.notifier,
+                );
                 await notifier.refreshListener();
                 final connected = await notifier.isServiceConnected();
                 if (context.mounted) {
@@ -65,7 +71,6 @@ class SettingsScreen extends ConsumerWidget {
               child: const Text('Refresh'),
             ),
           ),
-          ),
           const Divider(),
           const SectionTitle(title: 'Live Call Protection (Offline AI)'),
           Consumer(
@@ -73,18 +78,26 @@ class SettingsScreen extends ConsumerWidget {
               final isOfflineEngineActive = ref.watch(_offlineAiToggleProvider);
               return SwitchListTile(
                 title: const Text('Zero-Knowledge Offline AI'),
-                subtitle: const Text('Keeps all live call transcripts natively on your device. Audio is permanently deleted after 30s. No cloud connectivity required.'),
+                subtitle: const Text(
+                  'Keeps all live call transcripts natively on your device. Audio is permanently deleted after 30s. No cloud connectivity required.',
+                ),
                 value: isOfflineEngineActive,
                 activeColor: Colors.green[600],
                 secondary: Icon(
-                  isOfflineEngineActive ? Icons.shield : Icons.gpp_maybe, 
-                  color: isOfflineEngineActive ? Colors.green[700] : Colors.grey,
+                  isOfflineEngineActive ? Icons.shield : Icons.gpp_maybe,
+                  color: isOfflineEngineActive
+                      ? Colors.green[700]
+                      : Colors.grey,
                 ),
                 onChanged: (val) {
                   ref.read(_offlineAiToggleProvider.notifier).state = val;
                   if (val) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Offline Local Monitor Active! Cloud features disabled.')),
+                      const SnackBar(
+                        content: Text(
+                          'Offline Local Monitor Active! Cloud features disabled.',
+                        ),
+                      ),
                     );
                   }
                 },
@@ -102,7 +115,8 @@ class SettingsScreen extends ConsumerWidget {
           const SectionTitle(title: 'App Info'),
           const InfoCard(
             title: 'Rakshak',
-            subtitle: 'Your AI Companion for Safe Digital Banking.\nVersion 1.0',
+            subtitle:
+                'Your AI Companion for Safe Digital Banking.\nVersion 1.0',
             icon: AppIcons.safe,
           ),
         ],
