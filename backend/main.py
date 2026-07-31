@@ -28,8 +28,12 @@ class TestWhatsAppRequest(BaseModel):
 
 @app.post("/family/send-alert")
 def send_family_alert(req: FamilyAlertRequest):
+    phone = req.recipient_phone.replace("+", "").replace("-", "").replace(" ", "")
+    if len(phone) == 10 and phone.isdigit():
+        phone = "91" + phone
+        
     # Simulated WhatsApp Business API Dispatcher
-    print(f"[WHATSAPP API] Dispatching high-risk alert to +{req.recipient_phone}")
+    print(f"[WHATSAPP API] Dispatching high-risk alert to +{phone}")
     print(f"Template Payload: User {req.user_name} is targeted by {req.risk_level} {req.category}.")
     
     # Normally we would await meta client graph responses here.

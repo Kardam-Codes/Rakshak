@@ -38,7 +38,12 @@ class RecoveryService {
   /// Send SMS to trusted contact
   Future<bool> notifyTrustedContact(String contactNumber, String originalMessage) async {
     final String body = 'Hello, I received this unusual msg:\n\n$originalMessage';
-    final Uri smsUri = Uri(scheme: 'sms', path: contactNumber, queryParameters: {'body': body});
+    
+    // Auto-prepend India country code if it's a standard 10-digit number
+    final String cleanNumber = contactNumber.replaceAll(RegExp(r'\D'), '');
+    final String formattedNumber = (cleanNumber.length == 10) ? '+91$cleanNumber' : contactNumber;
+    
+    final Uri smsUri = Uri(scheme: 'sms', path: formattedNumber, queryParameters: {'body': body});
     if (await canLaunchUrl(smsUri)) {
       return await launchUrl(smsUri);
     }
