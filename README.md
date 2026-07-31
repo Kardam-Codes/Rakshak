@@ -131,7 +131,7 @@ For detailed engineering documentation, see:
 
 ## AI
 
-- Google Gemini API
+- Offline Native AI (MediaPipe/TFLite)
 - Rule-Based Detection Engine
 
 ## Platform

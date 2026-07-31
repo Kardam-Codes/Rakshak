@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../models/notification_entity.dart';
 import '../models/call_entity.dart';
 import 'models/risk_level.dart';
+import 'models/scam_category.dart';
 import '../api/rakshak_client.dart';
 import '../utils/pii_masking.dart';
 import '../repositories/notification_repository.dart';
@@ -11,6 +12,7 @@ import '../repositories/call_repository.dart';
 import '../models/upi_transaction_entity.dart';
 import '../repositories/upi_repository.dart';
 import 'explainability/explainability_engine.dart';
+import 'models/scam_category.dart';
 
 class AlertEngine {
   final NotificationRepository _repository;
@@ -29,11 +31,23 @@ class AlertEngine {
 
     // Attach hash
     var currentEntity = entity.copyWith(notificationHash: contentHash);
-
-    // 2. Fast Path: If Safe/Low, just save and exit to avoid AI overhead
-    if (currentEntity.riskLevel == RiskLevel.safe || currentEntity.riskLevel == RiskLevel.low) {
-      await _repository.saveNotification(currentEntity);
+    final existingRecord = await _repository.findNotificationByHash(contentHash);
+    if (existingRecord != null) {
+      final updatedEntity = currentEntity.copyWith(
+        id: existingRecord.id,
+        isRead: existingRecord.isRead,
+        aiSimpleExplanation: existingRecord.aiSimpleExplanation,
+        aiReason: existingRecord.aiReason,
+        aiRecommendedAction: existingRecord.aiRecommendedAction,
+      );
+      await _repository.updateNotification(updatedEntity);
       return;
+    }
+
+    // 2. Removed Fast Path: AI will be forced globally for all Notification variants
+    if (currentEntity.riskLevel == RiskLevel.safe || currentEntity.riskLevel == RiskLevel.low) {
+      currentEntity = currentEntity.copyWith(id: await _repository.saveNotification(currentEntity));
+      // fall-through to AI fetch
     }
 
     // 3. Medium/High/Critical Path
@@ -66,7 +80,9 @@ class AlertEngine {
 
   void _triggerPopupIfCritical(NotificationEntity entity) {
     if (onCriticalAlert != null) {
-      if (entity.riskLevel == RiskLevel.high || entity.riskLevel == RiskLevel.critical) {
+      if (entity.riskLevel == RiskLevel.high || 
+          entity.riskLevel == RiskLevel.critical ||
+          entity.category == ScamCategory.otpScam) {
         onCriticalAlert!(
            title: entity.title,
            category: entity.category.name,
@@ -105,10 +121,9 @@ class AlertEngine {
   }
 
   Future<void> processCall(CallEntity entity) async {
-    // 1. Fast Path
+    // 1. Removed Fast Path bypass
     if (entity.riskLevel == RiskLevel.safe || entity.riskLevel == RiskLevel.low) {
-      await _callRepository.saveCall(entity);
-      return;
+       // fall-through
     }
 
     // 2. Save immediately for UI
@@ -151,10 +166,9 @@ class AlertEngine {
   }
 
   Future<void> processUPITransaction(UPITransactionEntity entity) async {
-    // fast path
+    // fast path bypass removed
     if (entity.riskLevel == RiskLevel.safe || entity.riskLevel == RiskLevel.low) {
-       // already saved in service layer
-       return;
+       // fall-through
     }
 
     if (entity.riskLevel == RiskLevel.high || entity.riskLevel == RiskLevel.critical) {

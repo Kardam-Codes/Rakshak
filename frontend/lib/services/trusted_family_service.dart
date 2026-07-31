@@ -1,4 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:telephony/telephony.dart';
 import 'package:http/http.dart' as http;
 import '../core/database/app_database.dart';
 import '../models/trusted_contact.dart';
@@ -12,6 +16,8 @@ class TrustedFamilyService {
   final AppDatabase _db;
   final TrustedFamilyAnalyticsService _analyticsService;
   final String backendBaseUrl;
+  
+  static final Map<String, DateTime> _recentlySentAlerts = {};
 
   TrustedFamilyService({
     required TrustedFamilyRepository repository,
@@ -33,6 +39,16 @@ class TrustedFamilyService {
     if (!_repository.isFeatureEnabled || !_repository.hasPrivacyConsent) {
       return false;
     }
+    
+    // Prevent spamming family contacts by debouncing identical alerts for 30 minutes
+    if (_recentlySentAlerts.containsKey(category)) {
+      final lastSent = _recentlySentAlerts[category]!;
+      if (DateTime.now().difference(lastSent).inMinutes < 30) {
+        debugPrint('Blocked spam SMS for $category: Already sent recently.');
+        return false;
+      }
+    }
+    _recentlySentAlerts[category] = DateTime.now();
 
     final contacts = await _repository.getAllContacts();
     if (contacts.isEmpty) return false;
@@ -50,7 +66,7 @@ class TrustedFamilyService {
               headers: {'Content-Type': 'application/json'},
               body: jsonEncode({
                 'user_name': userName,
-                'recipient_email': contact.email,
+
                 'recipient_phone': contact.phoneNumber,
                 'recipient_name': contact.name,
                 'risk_level': riskLevel.name.toUpperCase(),
@@ -58,7 +74,7 @@ class TrustedFamilyService {
                 'reason': reason,
                 'ai_explanation': aiExplanation,
                 'recommended_action': recommendedAction,
-                'notification_method': contact.preferredNotificationMethod.name,
+                'notification_method': 'SMS_AND_WHATSAPP',
               }),
             )
             .timeout(const Duration(seconds: 5));
@@ -72,11 +88,11 @@ class TrustedFamilyService {
 
         // Save delivery record to Hive history
         final historyEntity = FamilyAlertHistoryEntity(
-          recipientEmail: contact.email,
+          recipientPhone: contact.phoneNumber,
           recipientName: contact.name,
           riskLevel: riskLevel,
           category: category,
-          messageSummary: 'High-risk alert notification sent to ${contact.name} (${contact.relationship})',
+          messageSummary: 'High-risk WhatsApp alert sent to ${contact.name} (${contact.relationship})',
           timestamp: DateTime.now(),
           deliveryStatus: isSuccess ? 'sent' : 'failed',
           viewed: false,
@@ -84,9 +100,19 @@ class TrustedFamilyService {
 
         await _db.insertFamilyAlertHistory(historyEntity);
       } catch (e) {
-        // Fallback history record if network offline
+        // Fallback history record if network offline (Execute Telephony SMS)
+        if (e is SocketException || e.toString().contains('TimeoutException')) {
+          _analyticsService.logEvent('offline_sms_fallback_triggered');
+          try {
+             String smsBody = 'URGENT: $userName is targeted by a ${riskLevel.name} $category.\nReason: $reason.\nTake immediate action.';
+             await Telephony.backgroundInstance.sendSms(to: contact.phoneNumber, message: smsBody);
+          } catch(smsErr) {
+             debugPrint('SMS Fallback failed: $smsErr');
+          }
+        }
+
         final historyEntity = FamilyAlertHistoryEntity(
-          recipientEmail: contact.email,
+          recipientPhone: contact.phoneNumber,
           recipientName: contact.name,
           riskLevel: riskLevel,
           category: category,

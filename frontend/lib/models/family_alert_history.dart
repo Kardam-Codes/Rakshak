@@ -2,7 +2,7 @@ import '../engine/models/risk_level.dart';
 
 class FamilyAlertHistoryEntity {
   final int? id;
-  final String recipientEmail;
+  final String recipientPhone;
   final String recipientName;
   final RiskLevel riskLevel;
   final String category;
@@ -13,7 +13,7 @@ class FamilyAlertHistoryEntity {
 
   FamilyAlertHistoryEntity({
     this.id,
-    required this.recipientEmail,
+    required this.recipientPhone,
     required this.recipientName,
     required this.riskLevel,
     required this.category,
@@ -25,7 +25,7 @@ class FamilyAlertHistoryEntity {
 
   FamilyAlertHistoryEntity copyWith({
     int? id,
-    String? recipientEmail,
+    String? recipientPhone,
     String? recipientName,
     RiskLevel? riskLevel,
     String? category,
@@ -36,7 +36,7 @@ class FamilyAlertHistoryEntity {
   }) {
     return FamilyAlertHistoryEntity(
       id: id ?? this.id,
-      recipientEmail: recipientEmail ?? this.recipientEmail,
+      recipientPhone: recipientPhone ?? this.recipientPhone,
       recipientName: recipientName ?? this.recipientName,
       riskLevel: riskLevel ?? this.riskLevel,
       category: category ?? this.category,

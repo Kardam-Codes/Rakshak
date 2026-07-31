@@ -172,7 +172,7 @@ Basic interface translation
 
 - Local SQLite storage
 - FastAPI backend
-- Gemini integration
+- Local Edge AI integration
 - Rule Engine
 - Offline fallback
 

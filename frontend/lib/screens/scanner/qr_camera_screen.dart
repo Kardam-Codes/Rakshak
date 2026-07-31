@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/spacing.dart';
 
@@ -50,6 +51,28 @@ class _QrCameraScreenState extends State<QrCameraScreen> {
         _hasScanned = true;
         Navigator.of(context).pop(rawValue);
         break;
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      final capture = await _controller.analyzeImage(image.path);
+      if (capture != null && capture.barcodes.isNotEmpty) {
+        if (!_hasScanned) {
+          _hasScanned = true;
+          if (mounted) {
+            Navigator.of(context).pop(capture.barcodes.first.rawValue);
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No QR code found in image')),
+          );
+        }
       }
     }
   }
@@ -110,6 +133,10 @@ class _QrCameraScreenState extends State<QrCameraScreen> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.image_outlined),
+            onPressed: _pickImage,
+          ),
           IconButton(
             icon: const Icon(Icons.flash_on),
             onPressed: () => _controller.toggleTorch(),

@@ -24,10 +24,9 @@ class TrustedFamilyRepository {
       throw Exception('Maximum 5 trusted contacts allowed. Please remove a contact before adding a new one.');
     }
 
-    // Duplicate detection (email or phone)
+    // Duplicate detection (phone)
     final isDuplicate = current.any(
-      (c) => c.email.trim().toLowerCase() == contact.email.trim().toLowerCase() ||
-          c.phoneNumber.replaceAll(RegExp(r'\D'), '') == contact.phoneNumber.replaceAll(RegExp(r'\D'), ''),
+      (c) => c.phoneNumber.replaceAll(RegExp(r'\D'), '') == contact.phoneNumber.replaceAll(RegExp(r'\D'), ''),
     );
 
     if (isDuplicate) {

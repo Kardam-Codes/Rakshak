@@ -15,6 +15,7 @@ import 'rules/loan_rules.dart';
 import 'rules/refund_rules.dart';
 import 'rules/investment_rules.dart';
 import 'rules/general_rules.dart';
+import 'rules/job_rules.dart';
 import 'rules/call_rules.dart';
 import 'rules/scan_rules.dart';
 
@@ -33,6 +34,7 @@ class ScanClassifier {
     ...refundRules,
     ...investmentRules,
     ...generalRules,
+    ...jobRules,
     ...scanRules,
   ];
 
@@ -91,18 +93,7 @@ class ScanClassifier {
       }
     }
 
-    // Special type-specific fallback rules (only if verified format)
-    if (type == ScanType.qr && lowerContent.startsWith('upi://pay')) {
-      if (matchedRules.isEmpty) {
-        primaryCategory = ScamCategory.qrScam;
-      }
-    } else if (type == ScanType.url && (lowerContent.startsWith('http://') || lowerContent.startsWith('https://'))) {
-      if (matchedRules.isEmpty) {
-        primaryCategory = ScamCategory.unknown;
-      }
-    }
-
-    // 3. Risk Scoring Engine Phase
+     // 3. Risk Scoring Engine Phase
     final scoreResult = RiskScorer.calculateScore(matchedRules, validationFailed: validationFailures.isNotEmpty);
     
     // 4. Final Decision Construction

@@ -44,10 +44,13 @@ class ExplanationDetailScreen extends StatelessWidget {
                    Row(
                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                      children: [
-                       Text(
-                         contextTitle,
-                         style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                       Expanded(
+                         child: Text(
+                           contextTitle,
+                           style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                         ),
                        ),
+                       const SizedBox(width: 8),
                        ConfidenceBadge(confidence: entity.confidence),
                      ],
                    ),

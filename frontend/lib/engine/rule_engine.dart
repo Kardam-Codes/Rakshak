@@ -12,6 +12,7 @@ import 'rules/loan_rules.dart';
 import 'rules/refund_rules.dart';
 import 'rules/investment_rules.dart';
 import 'rules/general_rules.dart';
+import 'rules/job_rules.dart';
 import 'rules/call_rules.dart';
 import 'rules/scan_rules.dart';
 import '../models/scan_entity.dart';
@@ -26,6 +27,7 @@ class RuleEngine {
     ...refundRules,
     ...investmentRules,
     ...generalRules,
+    ...jobRules,
     ...scanRules,
   ];
 

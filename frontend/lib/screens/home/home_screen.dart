@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'widgets/risk_summary_card.dart';
+import 'package:go_router/go_router.dart';
 import 'widgets/quick_actions.dart';
 import 'widgets/recent_alerts.dart';
 import 'widgets/recent_scan_widget.dart';
@@ -14,19 +14,19 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Good Morning, User'),
+        title: const Text('Rakshak', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle_outlined),
-            onPressed: () {},
+            onPressed: () {
+              context.push('/settings/account');
+            },
           )
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.s16),
         children: const [
-          RiskSummaryCard(),
-          SizedBox(height: AppSpacing.s24),
           QuickActions(),
           SizedBox(height: AppSpacing.s16),
           TrustedFamilyCard(),

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/engine/explainability/templates/explanation_templates.dart';
+import 'package:rakshak/engine/explainability/templates/explanation_templates.dart';
+import 'package:rakshak/engine/models/scam_category.dart';
 import '../lib/engine/explainability/prompt_builder.dart';
-import '../lib/engine/models/scam_category.dart';
 
 void main() {
   group('ExplanationTemplateBuilder Tests', () {

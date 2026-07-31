@@ -16,6 +16,12 @@ class NotificationDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final notificationsAsync = ref.watch(notificationsProvider);
+    final notification = notificationsAsync.valueOrNull?.firstWhere(
+      (n) => n.id == this.notification.id, 
+      orElse: () => this.notification,
+    ) ?? this.notification;
+
     if (!notification.isRead && notification.id != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         try {
@@ -30,6 +36,17 @@ class NotificationDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Alert Details'),
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/alerts');
+            }
+          },
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.s16),
@@ -106,9 +123,11 @@ class NotificationDetailScreen extends ConsumerWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       const SizedBox(width: AppSpacing.s16),
-                      Text(
-                        'AI Scam Guardian is analyzing...',
-                        style: TextStyle(color: Theme.of(context).colorScheme.onTertiaryContainer, fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Text(
+                          'AI Scam Guardian is analyzing...',
+                          style: TextStyle(color: Theme.of(context).colorScheme.onTertiaryContainer, fontWeight: FontWeight.bold),
+                        ),
                       )
                     ],
                   ),
@@ -128,10 +147,12 @@ class NotificationDetailScreen extends ConsumerWidget {
                         children: [
                           Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.secondary),
                           const SizedBox(width: AppSpacing.s8),
-                          Text('AI Explanation', style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.secondary,
-                            fontWeight: FontWeight.bold,
-                          )),
+                          Expanded(
+                            child: Text('AI Explanation', style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontWeight: FontWeight.bold,
+                            )),
+                          ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.s16),
@@ -140,26 +161,27 @@ class NotificationDetailScreen extends ConsumerWidget {
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: AppSpacing.s8),
-                      Text(notification.aiReason!),
+                      if (notification.aiReason != null) Text(notification.aiReason!),
                       const SizedBox(height: AppSpacing.s16),
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.s16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
+                      if (notification.aiRecommendedAction != null)
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.s16),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.shield_outlined, size: 20, color: Theme.of(context).colorScheme.error),
+                              const SizedBox(width: AppSpacing.s8),
+                              Expanded(child: Text(
+                                notification.aiRecommendedAction!,
+                                style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.bold),
+                              ))
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.shield_outlined, size: 20, color: Theme.of(context).colorScheme.error),
-                            const SizedBox(width: AppSpacing.s8),
-                            Expanded(child: Text(
-                              notification.aiRecommendedAction!,
-                              style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.bold),
-                            ))
-                          ],
-                        ),
-                      )
                     ],
                   ),
                 )

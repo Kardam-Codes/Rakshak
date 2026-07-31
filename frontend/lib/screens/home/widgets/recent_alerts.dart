@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/spacing.dart';
 import '../../../core/constants/icons.dart';
 import '../../../providers/notification_provider.dart';
+import '../../../engine/models/risk_level.dart';
+import '../../../engine/models/scam_category.dart';
 
 class RecentAlerts extends ConsumerWidget {
   const RecentAlerts({super.key});
@@ -23,7 +25,7 @@ class RecentAlerts extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () => context.go('/alerts'),
               child: const Text('View All'),
             ),
           ],
@@ -31,13 +33,14 @@ class RecentAlerts extends ConsumerWidget {
         const SizedBox(height: AppSpacing.s8),
         notificationsAsync.when(
           data: (notifications) {
-            if (notifications.isEmpty) {
+            final unsafeNotifications = notifications.where((n) => n.riskLevel != RiskLevel.safe).toList();
+            if (unsafeNotifications.isEmpty) {
               return const Padding(
                 padding: EdgeInsets.all(AppSpacing.s8),
                 child: Text('No recent alerts.'),
               );
             }
-            final recent = notifications.take(5).toList();
+            final recent = unsafeNotifications.take(5).toList();
             return Column(
               children: recent.map((notif) => ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -55,7 +58,11 @@ class RecentAlerts extends ConsumerWidget {
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  context.push('/notification_detail', extra: notif);
+                  if (notif.category == ScamCategory.otpScam) {
+                    context.push('/otp_detail', extra: notif);
+                  } else {
+                    context.push('/alerts/notification_detail', extra: notif);
+                  }
                 },
               )).toList(),
             );

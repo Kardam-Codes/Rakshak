@@ -4,6 +4,8 @@ import '../core/database/app_database.dart';
 import '../repositories/notification_repository.dart';
 import '../services/notification_service.dart';
 import '../models/notification_entity.dart';
+import '../repositories/explainability_repository.dart';
+import '../engine/explainability/explainability_engine.dart';
 import 'database_provider.dart';
 import 'call_provider.dart';
 import 'upi_provider.dart';
@@ -19,8 +21,13 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   final callRepo = ref.watch(callRepositoryProvider);
   final upiRepo = ref.watch(upiRepositoryProvider);
   final trustedFamilyService = ref.watch(trustedFamilyServiceProvider);
-  final explainEngine = ref.watch(explainabilityEngineProvider);
-  return NotificationService(repo, callRepo, upiRepo, trustedFamilyService, explainEngine);
+  final db = ref.watch(appDatabaseProvider);
+  final explainRepo = ExplainabilityRepository(db);
+  final explainEngine = ExplainabilityEngine(explainRepo);
+  
+  final service = NotificationService(repo, callRepo, upiRepo, trustedFamilyService, explainEngine);
+  ref.onDispose(service.dispose);
+  return service;
 });
 
 final notificationsProvider = StreamProvider<List<NotificationEntity>>((ref) {
@@ -60,13 +67,21 @@ class NotificationPermissionNotifier extends StateNotifier<bool> with WidgetsBin
       state = isGranted;
     }
     if (isGranted) {
-      _service.startListening();
-      await _service.syncExistingNotifications();
+      await _service.refreshListener();
     }
   }
 
   Future<void> requestPermission() async {
     await _service.requestPermission();
-    // Re-check happens on lifecycle resume
+    await checkPermission();
+  }
+
+  Future<void> refreshListener() async {
+    await _service.refreshListener();
+    state = await _service.checkPermission();
+  }
+
+  Future<bool> isServiceConnected() {
+    return _service.isServiceConnected();
   }
 }

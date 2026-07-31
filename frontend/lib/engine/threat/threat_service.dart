@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:crypto/crypto.dart' as crypto;
 import '../models/detection_result.dart';
+import '../models/risk_level.dart';
 import 'decision_merger.dart';
 import 'threat_cache.dart';
 import 'threat_models.dart';
@@ -48,11 +51,19 @@ class ThreatService {
   }
 
   Future<MergedDecision> analyzeAndMerge(String url, DetectionResult offlineResult) async {
-    // 1. Check if offline is already Critical based on Validation Failure
-    // But we still want to query threat intel for AI explainability if possible
+    // 1. Layer 1: Zero-Knowledge Short-Circuit
+    if (offlineResult.riskLevel == RiskLevel.critical) {
+      // Threat is already categorized maliciously offline. 
+      // Abort external APIs to preserve absolute privacy.
+      return DecisionMerger.merge(offlineResult, null);
+    }
     
+    // Layer 2: Zero-Knowledge Hashes
+    // Never transmit plaintext URLs to the cloud.
+    final bytes = utf8.encode(url);
+    final hashedUrl = crypto.sha256.convert(bytes).toString();
     // 2. Check Cache
-    final cachedSummary = _cache.get(url);
+    final cachedSummary = _cache.get(hashedUrl);
     if (cachedSummary != null) {
       return DecisionMerger.merge(offlineResult, cachedSummary);
     }
@@ -63,10 +74,10 @@ class ThreatService {
       return DecisionMerger.merge(offlineResult, null);
     }
 
-    // 4. Query Threat Api (Backend Mock)
+    // 4. Query Threat Api using the Hash (Masking PII)
     try {
-      final summary = await _api.scanUrl(url).timeout(const Duration(seconds: 5));
-      _cache.put(url, summary);
+      final summary = await _api.scanUrl(hashedUrl).timeout(const Duration(seconds: 5));
+      _cache.put(hashedUrl, summary);
       return DecisionMerger.merge(offlineResult, summary);
     } catch (_) {
       // Timeout or API failure

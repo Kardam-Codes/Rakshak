@@ -122,7 +122,7 @@ The Rule Engine is:
 - Lightweight
 - Explainable
 
-Only suspicious events should be forwarded to Gemini.
+All intercepted events flow unilaterally into the Native SLM.
 
 ---
 
@@ -520,7 +520,7 @@ Do not disable protection.
 
 # AI Failure Handling
 
-If Gemini fails
+If Native Inference fails
 
 - Retry once
 - Fall back to Rule Engine
@@ -597,4 +597,4 @@ Performance should be measured using
 
 # Summary
 
-Rakshak combines a lightweight local Rule Engine with cloud-based AI to deliver explainable, privacy-conscious financial scam detection. Every decision must be transparent, actionable, and focused on helping users make safer financial choices while minimizing unnecessary AI usage and protecting sensitive personal information.
+Rakshak combines a lightweight local Rule Engine with a powerful Zero-Knowledge offline SLM to deliver explainable, privacy-conscious financial scam detection. Every decision must be transparent, actionable, and focused on helping users make safer financial choices while minimizing unnecessary AI usage and protecting sensitive personal information.

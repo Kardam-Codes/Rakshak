@@ -255,13 +255,15 @@ class ScanResultScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
-                      children: [
+                    Row(
+                      children: const [
                         Icon(Icons.shield_outlined, color: AppColors.primary, size: 28),
                         SizedBox(width: 12),
-                        Text(
-                          'What should you do?',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        Expanded(
+                          child: Text(
+                            'What should you do?',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ],
                     ),

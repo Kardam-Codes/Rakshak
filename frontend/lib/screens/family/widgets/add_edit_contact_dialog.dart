@@ -22,9 +22,7 @@ class _AddEditContactDialogState extends State<AddEditContactDialog> {
 
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
-  late TextEditingController _emailController;
   late String _relationship;
-  late NotificationMethod _notificationMethod;
   late bool _isPrimary;
 
   final List<String> _relationships = [
@@ -42,9 +40,7 @@ class _AddEditContactDialogState extends State<AddEditContactDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.contact?.name ?? '');
     _phoneController = TextEditingController(text: widget.contact?.phoneNumber ?? '');
-    _emailController = TextEditingController(text: widget.contact?.email ?? '');
     _relationship = widget.contact?.relationship ?? 'Son';
-    _notificationMethod = widget.contact?.preferredNotificationMethod ?? NotificationMethod.email;
     _isPrimary = widget.contact?.isPrimary ?? false;
   }
 
@@ -52,7 +48,6 @@ class _AddEditContactDialogState extends State<AddEditContactDialog> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
-    _emailController.dispose();
     super.dispose();
   }
 
@@ -62,9 +57,7 @@ class _AddEditContactDialogState extends State<AddEditContactDialog> {
         id: widget.contact?.id,
         name: _nameController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
-        email: _emailController.text.trim(),
         relationship: _relationship,
-        preferredNotificationMethod: _notificationMethod,
         isPrimary: _isPrimary,
         isEmergency: true,
       );
@@ -117,21 +110,6 @@ class _AddEditContactDialogState extends State<AddEditContactDialog> {
                 },
               ),
               const SizedBox(height: AppSpacing.s12),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email Address *',
-                  prefixIcon: Icon(Icons.email),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Please enter email address';
-                  if (!val.contains('@') || !val.contains('.')) return 'Enter valid email address';
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppSpacing.s12),
               DropdownButtonFormField<String>(
                 value: _relationship,
                 decoration: const InputDecoration(
@@ -144,24 +122,6 @@ class _AddEditContactDialogState extends State<AddEditContactDialog> {
                     .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _relationship = val);
-                },
-              ),
-              const SizedBox(height: AppSpacing.s12),
-              DropdownButtonFormField<NotificationMethod>(
-                value: _notificationMethod,
-                decoration: const InputDecoration(
-                  labelText: 'Preferred Method',
-                  prefixIcon: Icon(Icons.notifications_active_outlined),
-                  border: OutlineInputBorder(),
-                ),
-                items: NotificationMethod.values
-                    .map((m) => DropdownMenuItem(
-                          value: m,
-                          child: Text(m.displayName),
-                        ))
-                    .toList(),
-                onChanged: (val) {
-                  if (val != null) setState(() => _notificationMethod = val);
                 },
               ),
               const SizedBox(height: AppSpacing.s12),

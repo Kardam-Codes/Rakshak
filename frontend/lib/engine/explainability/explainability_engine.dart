@@ -32,7 +32,7 @@ class ExplainabilityEngine {
     final cached = _repository.findExplanationByHash(hash);
     if (cached != null) {
       // Re-trigger async AI fetch if it was interrupted previously
-      if (cached.aiExplanation == null && (riskLevel == RiskLevel.high || riskLevel == RiskLevel.critical)) {
+      if (cached.aiExplanation == null && riskLevel != RiskLevel.safe) {
         _triggerAiFetch(cached, content);
       }
       return cached;
@@ -59,7 +59,7 @@ class ExplainabilityEngine {
     entity = entity.copyWith(id: id);
 
     // 4. Trigger Async AI Fetch if High/Critical
-    if (riskLevel == RiskLevel.high || riskLevel == RiskLevel.critical) {
+    if (riskLevel != RiskLevel.safe) {
       _triggerAiFetch(entity, content);
     }
 

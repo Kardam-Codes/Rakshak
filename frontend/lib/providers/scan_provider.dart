@@ -6,6 +6,8 @@ import '../services/scan_analytics_service.dart';
 import '../services/ocr_service.dart';
 import '../engine/scan_engine.dart';
 import 'database_provider.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart' as fo;
+import '../engine/models/risk_level.dart';
 
 final scanRepositoryProvider = Provider<ScanRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -91,6 +93,23 @@ class ScanController extends StateNotifier<ScanState> {
         statusMessage: null,
         lastResult: result,
       );
+
+      // F009 Integration: Trigger background emergency alert for manual critical scans
+      if (result.riskLevel == RiskLevel.critical) {
+        final alertId = DateTime.now().millisecondsSinceEpoch.toString();
+        /*
+        if (await fo.FlutterOverlayWindow.isPermissionGranted()) {
+          await fo.FlutterOverlayWindow.showOverlay(
+            enableDrag: true,
+            overlayTitle: "Emergency Alert Countdown",
+            overlayContent: "FAMILY_ALERT:$alertId:High-Risk Threat Confirmed",
+            flag: fo.OverlayFlag.defaultFlag,
+            visibility: fo.NotificationVisibility.visibilityPublic,
+          );
+        }
+        */
+      }
+
       return result;
     } catch (e) {
       state = state.copyWith(

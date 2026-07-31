@@ -8,9 +8,14 @@ import 'routes/app_router.dart';
 import 'core/database/app_database.dart';
 import 'providers/notification_provider.dart';
 import 'providers/database_provider.dart';
+import 'providers/call_provider.dart';
+import 'services/local_notification_service.dart';
+import 'engine/slm/offline_ai_engine.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalNotificationService.initialize();
+  await OfflineAiEngine().initializeLocalSLM('assets/models/llm.bin');
   final db = AppDatabase();
   await db.init();
   
@@ -30,6 +35,8 @@ class RakshakApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    ref.watch(notificationPermissionProvider);
+    ref.watch(callDetectionServiceProvider);
 
     return MaterialApp.router(
       title: AppStrings.appName,

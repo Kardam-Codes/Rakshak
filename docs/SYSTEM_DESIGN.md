@@ -32,7 +32,7 @@ Sensitive user information should remain on the user's device whenever possible.
 
 Perform lightweight scam detection locally.
 
-Only send data to cloud AI when necessary.
+All payload evaluations execute 100% locally on the neural processing unit.
 
 ---
 
@@ -77,7 +77,7 @@ Scanner Engine        │                    │
                      │
          ┌───────────┴───────────┐
          ▼                       ▼
-   Rule Engine            Gemini API
+   Rule Engine              Offline SLM
          │                       │
          └───────────┬───────────┘
                      ▼
@@ -117,7 +117,7 @@ SQLite (Local)
 
 ## AI
 
-Gemini API
+On-Device SLM (MediaPipe)
 
 Rule-Based Detection
 
@@ -322,7 +322,7 @@ Safe?
 
 ↓
 
-Gemini Analysis
+Offline SLM Inference
 
 ↓
 
@@ -343,33 +343,10 @@ User
 
 ---
 
-# Local vs Cloud Processing
+# 100% Zero-Knowledge Edge Execution
 
-## Local Processing
-
-Notification Filtering
-
-Keyword Detection
-
-Rule Engine
-
-History
-
-Permissions
-
-Risk Cache
-
-Voice Playback
-
----
-
-## Cloud Processing
-
-Advanced AI Analysis
-
-Explanation Generation
-
-Future Model Improvements
+Following the F-009 structural pivot, Rakshak executes its entire logical pipeline strictly within the physical boundaries of the device. Cloud dependency for AI threat vectors has been amputated.
+All advanced SLM inference, explanation Generation, speech-to-text transcription, and notification monitoring occurs exclusively in local RAM.
 
 ---
 
@@ -531,7 +508,7 @@ Explain every permission.
 
 # Failure Handling
 
-If Gemini is unavailable
+If Offline SLM Inference fails
 
 ↓
 
@@ -544,22 +521,6 @@ Warn user
 ↓
 
 Continue protection
-
----
-
-If Internet unavailable
-
-↓
-
-Local Detection
-
-↓
-
-Offline Explanation
-
-↓
-
-Retry Cloud Analysis Later
 
 ---
 

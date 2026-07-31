@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widgets/recovery_action_card.dart';
 import '../../providers/emergency_provider.dart';
+import '../../providers/trusted_family_provider.dart';
 
 class EmergencyScreen extends ConsumerStatefulWidget {
   final String? suspiciousMessage;
@@ -22,44 +23,70 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
   }
 
   Future<void> _handleNotifyTrustedContact() async {
-    final trustedContact = ref.read(trustedContactProvider);
+    final repository = ref.read(trustedFamilyRepositoryProvider);
     final recoveryService = ref.read(recoveryServiceProvider);
     final msg = widget.suspiciousMessage ?? "Suspicious activity detected on my account.";
 
-    if (trustedContact == null || trustedContact.isEmpty) {
-      // Prompt for contact
-      final number = await showDialog<String>(
+    final contacts = await repository.getAllContacts();
+
+    if (contacts.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please add a contact in Trusted Family settings first.')),
+        );
+      }
+      return;
+    }
+
+    if (contacts.length == 1) {
+      await recoveryService.notifyTrustedContact(contacts.first.phoneNumber, msg);
+      return;
+    }
+
+    if (mounted) {
+      showModalBottomSheet(
         context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
         builder: (context) {
-          return AlertDialog(
-            title: const Text('Set Trusted Contact'),
-            content: TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText: 'Enter phone number',
-              ),
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'Select Trusted Contact',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: contacts.length,
+                    itemBuilder: (context, index) {
+                      final contact = contacts[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.green[100],
+                          child: Icon(Icons.person, color: Colors.green[800]),
+                        ),
+                        title: Text(contact.name),
+                        subtitle: Text('${contact.relationship} • ${contact.phoneNumber}'),
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await recoveryService.notifyTrustedContact(contact.phoneNumber, msg);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, _phoneController.text),
-                child: const Text('Save'),
-              ),
-            ],
           );
         },
       );
-
-      if (number != null && number.isNotEmpty) {
-        await ref.read(trustedContactProvider.notifier).setContact(number);
-        await recoveryService.notifyTrustedContact(number, msg);
-      }
-    } else {
-      await recoveryService.notifyTrustedContact(trustedContact, msg);
     }
   }
 

@@ -340,7 +340,7 @@ Explainability
 
 Language Generation
 
-This is the only layer that interacts with Gemini.
+This is the only layer that interacts with the Local SLM.
 
 ---
 

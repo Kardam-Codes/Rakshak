@@ -12,6 +12,7 @@ import '../../engine/models/risk_level.dart';
 import '../../engine/models/scam_category.dart';
 import '../../engine/models/transaction_type.dart';
 
+
 class NotificationEntityAdapter extends TypeAdapter<NotificationEntity> {
   @override
   final int typeId = 0;
@@ -248,15 +249,15 @@ class ExplanationEntityAdapter extends TypeAdapter<ExplanationEntity> {
     return ExplanationEntity(
       id: fields['id'],
       sourceFeature: fields['sourceFeature'] ?? '',
-      category: fields['category'] ?? '',
+      category: fields['category'] ?? ScamCategory.unknown.name,
       riskLevel: RiskLevel.values.firstWhere(
         (e) => e.name == fields['riskLevel'],
         orElse: () => RiskLevel.safe,
       ),
-      confidence: fields['confidence'] ?? 0.0,
+      confidence: (fields['confidence'] as num?)?.toDouble() ?? 0,
       offlineExplanation: fields['offlineExplanation'] ?? '',
       aiExplanation: fields['aiExplanation'],
-      recommendedAction: fields['recommendedAction'],
+      recommendedAction: fields['recommendedAction'] ?? '',
       preventionTips: (fields['preventionTips'] as List?)?.cast<String>() ?? [],
       summary: fields['summary'] ?? '',
       createdAt: fields['createdAt'] ?? DateTime.now(),
@@ -285,6 +286,7 @@ class ExplanationEntityAdapter extends TypeAdapter<ExplanationEntity> {
 
 class AppDatabase {
   static const String _boxName = 'notifications_box';
+  static const String _explanationsBoxName = 'explanations_box';
   static const String _callsBoxName = 'calls_box';
   static const String _upiBoxName = 'upi_transactions_box';
   static const String _scansBoxName = 'scans_box';
@@ -292,7 +294,6 @@ class AppDatabase {
   static const String _familyHistoryBoxName = 'family_alert_history_box';
   static const String _settingsBoxName = 'trusted_family_settings_box';
   static const String _analyticsBoxName = 'trusted_family_analytics_box';
-  static const String _explanationsBoxName = 'explanations_box';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -304,12 +305,12 @@ class AppDatabase {
     Hive.registerAdapter(FamilyAlertHistoryAdapter());
     Hive.registerAdapter(ExplanationEntityAdapter());
     await Hive.openBox<NotificationEntity>(_boxName);
+    await Hive.openBox<ExplanationEntity>(_explanationsBoxName);
     await Hive.openBox<CallEntity>(_callsBoxName);
     await Hive.openBox<UPITransactionEntity>(_upiBoxName);
     await Hive.openBox<ScanResultEntity>(_scansBoxName);
     await Hive.openBox<TrustedContact>(_trustedContactsBoxName);
     await Hive.openBox<FamilyAlertHistoryEntity>(_familyHistoryBoxName);
-    await Hive.openBox<ExplanationEntity>(_explanationsBoxName);
     await Hive.openBox(_settingsBoxName);
     await Hive.openBox(_analyticsBoxName);
   }
@@ -334,6 +335,21 @@ class AppDatabase {
   }
 
   Future<int> insertNotification(NotificationEntity entity) async {
+    if (entity.notificationHash != null) {
+      final existing = findNotificationByHash(entity.notificationHash!);
+      if (existing?.id != null) {
+        final updated = entity.copyWith(
+          id: existing!.id,
+          isRead: existing.isRead,
+          aiSimpleExplanation: entity.aiSimpleExplanation ?? existing.aiSimpleExplanation,
+          aiReason: entity.aiReason ?? existing.aiReason,
+          aiRecommendedAction: entity.aiRecommendedAction ?? existing.aiRecommendedAction,
+        );
+        await _box.put(existing.id!, updated);
+        return existing.id!;
+      }
+    }
+
     final id = await _box.add(entity);
     final updated = entity.copyWith(id: id);
     await _box.put(id, updated);
@@ -363,9 +379,39 @@ class AppDatabase {
     }
   }
 
+  NotificationEntity? findNotificationByHash(String hash) {
+    try {
+      return _box.values.firstWhere((e) => e.notificationHash == hash);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> updateNotification(NotificationEntity entity) async {
     if (entity.id != null && _box.containsKey(entity.id)) {
       await _box.put(entity.id!, entity);
+    }
+  }
+
+  Box<ExplanationEntity> get _explanationsBox => Hive.box<ExplanationEntity>(_explanationsBoxName);
+
+  Future<int> insertExplanation(ExplanationEntity entity) async {
+    final id = await _explanationsBox.add(entity);
+    await _explanationsBox.put(id, entity.copyWith(id: id));
+    return id;
+  }
+
+  Future<void> updateExplanation(ExplanationEntity entity) async {
+    if (entity.id != null && _explanationsBox.containsKey(entity.id)) {
+      await _explanationsBox.put(entity.id!, entity);
+    }
+  }
+
+  ExplanationEntity? getExplanationByHash(String hash) {
+    try {
+      return _explanationsBox.values.firstWhere((e) => e.contentHash == hash);
+    } catch (_) {
+      return null;
     }
   }
 
@@ -504,6 +550,8 @@ class AppDatabase {
     return id;
   }
 
+
+
   Future<void> updateTrustedContact(TrustedContact contact) async {
     if (contact.id != null && _trustedContactsBox.containsKey(contact.id)) {
       await _trustedContactsBox.put(contact.id!, contact);
@@ -553,28 +601,6 @@ class AppDatabase {
     await _familyHistoryBox.clear();
   }
 
-  // --- Explanation Entity Methods ---
-  Box<ExplanationEntity> get _explanationsBox => Hive.box<ExplanationEntity>(_explanationsBoxName);
-
-  Future<int> insertExplanation(ExplanationEntity entity) async {
-    final id = await _explanationsBox.add(entity);
-    await _explanationsBox.put(id, entity.copyWith(id: id));
-    return id;
-  }
-
-  Future<void> updateExplanation(ExplanationEntity entity) async {
-    if (entity.id != null && _explanationsBox.containsKey(entity.id)) {
-      await _explanationsBox.put(entity.id!, entity);
-    }
-  }
-
-  ExplanationEntity? getExplanationByHash(String hash) {
-    try {
-      return _explanationsBox.values.firstWhere((e) => e.contentHash == hash);
-    } catch (_) {
-      return null;
-    }
-  }
 }
 
 class TrustedContactAdapter extends TypeAdapter<TrustedContact> {
@@ -588,14 +614,9 @@ class TrustedContactAdapter extends TypeAdapter<TrustedContact> {
       id: fields['id'],
       name: fields['name'] ?? '',
       phoneNumber: fields['phoneNumber'] ?? '',
-      email: fields['email'] ?? '',
       relationship: fields['relationship'] ?? 'Family',
       profilePhoto: fields['profilePhoto'],
       language: fields['language'] ?? 'English',
-      preferredNotificationMethod: NotificationMethod.values.firstWhere(
-        (e) => e.name == fields['preferredNotificationMethod'],
-        orElse: () => NotificationMethod.email,
-      ),
       isPrimary: fields['isPrimary'] ?? false,
       isEmergency: fields['isEmergency'] ?? true,
       createdAt: fields['createdAt'] ?? DateTime.now(),
@@ -609,11 +630,9 @@ class TrustedContactAdapter extends TypeAdapter<TrustedContact> {
       'id': obj.id,
       'name': obj.name,
       'phoneNumber': obj.phoneNumber,
-      'email': obj.email,
       'relationship': obj.relationship,
       'profilePhoto': obj.profilePhoto,
       'language': obj.language,
-      'preferredNotificationMethod': obj.preferredNotificationMethod.name,
       'isPrimary': obj.isPrimary,
       'isEmergency': obj.isEmergency,
       'createdAt': obj.createdAt,
@@ -631,7 +650,7 @@ class FamilyAlertHistoryAdapter extends TypeAdapter<FamilyAlertHistoryEntity> {
     final fields = reader.readMap();
     return FamilyAlertHistoryEntity(
       id: fields['id'],
-      recipientEmail: fields['recipientEmail'] ?? '',
+      recipientPhone: fields['recipientPhone'] ?? '',
       recipientName: fields['recipientName'] ?? '',
       riskLevel: RiskLevel.values.firstWhere(
         (e) => e.name == fields['riskLevel'],
@@ -649,7 +668,7 @@ class FamilyAlertHistoryAdapter extends TypeAdapter<FamilyAlertHistoryEntity> {
   void write(BinaryWriter writer, FamilyAlertHistoryEntity obj) {
     writer.writeMap({
       'id': obj.id,
-      'recipientEmail': obj.recipientEmail,
+      'recipientPhone': obj.recipientPhone,
       'recipientName': obj.recipientName,
       'riskLevel': obj.riskLevel.name,
       'category': obj.category,

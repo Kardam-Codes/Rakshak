@@ -4,6 +4,11 @@ import '../repositories/call_repository.dart';
 import '../core/database/app_database.dart';
 
 import 'database_provider.dart';
+import '../services/call_detection_service.dart';
+import '../services/number_reputation_service.dart';
+import '../engine/slm/offline_audio_buffer.dart';
+import '../engine/slm/offline_ai_engine.dart';
+import '../engine/slm/offline_call_processor.dart';
 
 final callRepositoryProvider = Provider<CallRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -13,4 +18,25 @@ final callRepositoryProvider = Provider<CallRepository>((ref) {
 final callsProvider = StreamProvider<List<CallEntity>>((ref) {
   final repository = ref.watch(callRepositoryProvider);
   return repository.watchCalls();
+});
+
+final numberReputationServiceProvider = Provider<NumberReputationService>((ref) {
+  return MockReputationService();
+});
+
+final callDetectionServiceProvider = Provider<CallDetectionService>((ref) {
+  final callRepo = ref.watch(callRepositoryProvider);
+  final reputationService = ref.watch(numberReputationServiceProvider);
+  final service = CallDetectionService(callRepo, reputationService);
+  
+  // Asynchronously spawn phone state observation loops
+  service.initialize();
+  
+  // Start the Zero-Knowledge Live Call Protection NPU daemon automatically
+  final audioBuffer = OfflineAudioBuffer();
+  final aiEngine = OfflineAiEngine();
+  final callProcessor = OfflineCallProcessor(audioBuffer: audioBuffer, aiEngine: aiEngine);
+  callProcessor.startLocalMonitoring();
+  
+  return service;
 });

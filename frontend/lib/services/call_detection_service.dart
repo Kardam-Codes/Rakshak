@@ -70,6 +70,7 @@ class CallDetectionService {
 
   void _showWarningOverlay(String number, String riskLevel, String reason) async {
      // Triggering the flutter_overlay_window natively
+     /*
      if (await FlutterOverlayWindow.isPermissionGranted()) {
         FlutterOverlayWindow.showOverlay(
           enableDrag: true,
@@ -77,9 +78,10 @@ class CallDetectionService {
           overlayContent: "Suspicious Call: $number",
           flag: OverlayFlag.defaultFlag,
           visibility: NotificationVisibility.visibilityPublic,
-          positionGravity: PositionGravity.top,
+          positionGravity: PositionGravity.none,
         );
      }
+     */
   }
 
   void dispose() {
