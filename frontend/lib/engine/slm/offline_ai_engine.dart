@@ -51,7 +51,7 @@ Transcript: "$transcript"
     return _synchronized(() async {
       try {
         if (_llmInference == null) return null;
-        final responseStream = _llmInference!.generateResponse(prompt).timeout(const Duration(seconds: 15));
+        final responseStream = _llmInference!.generateResponse(prompt).timeout(const Duration(seconds: 60));
         final buffer = StringBuffer();
         await for (final chunk in responseStream) {
           buffer.write(chunk);
@@ -77,14 +77,14 @@ Context: "$contextData"
     return _synchronized(() async {
       try {
         if (_llmInference == null) return null;
-        final responseStream = _llmInference!.generateResponse(prompt).timeout(const Duration(seconds: 15));
+        final responseStream = _llmInference!.generateResponse(prompt).timeout(const Duration(seconds: 60));
         final buffer = StringBuffer();
         await for (final chunk in responseStream) {
           buffer.write(chunk);
         }
         return buffer.toString();
       } catch (e) {
-        debugPrint('SLM Explainability exception: $e');
+        debugPrint('SLM Explainability exception (Timeout or Native): $e');
         return 'Could not generate explanation due to an on-device error.';
       }
     });
