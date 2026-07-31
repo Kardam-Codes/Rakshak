@@ -248,7 +248,7 @@ class ScanResultScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.s24),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.dividerLight),
                 ),
